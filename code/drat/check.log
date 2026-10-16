@@ -1,0 +1,11 @@
+# 2026-10-15 CaDiCaL 3.0.1, drat-trim commit 2e3b2dc
+ce3835687d3b9210ee9c74df93cd8aea5f6eface68dcfb33413680f4efef9999  final.cnf
+s UNSATISFIABLE
+c parsing input formula with 183150 variables and 413520 clauses
+c finished parsing
+c detected empty clause; start verification via backward checking
+c 125023 of 413520 clauses in core                            
+c 120460 of 560025 lemmas in core using 1795045 resolution steps
+c 0 RAT lemmas in core; 15848 redundant literals in core lemmas
+s VERIFIED
+c verification time: 10.805 seconds

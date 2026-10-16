@@ -1,0 +1,448 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{enumitem}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\usepackage[capitalise]{cleveref}
+
+\setlength{\emergencystretch}{3em}
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{corollary}[theorem]{Corollary}
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+\newcommand{\F}{\mathbb{F}}
+\newcommand{\Qp}{\mathcal{Q}^{+}}
+\newcommand{\Qm}{\mathcal{Q}^{-}}
+\newcommand{\dg}{\operatorname{deg}}
+\newcommand{\Sp}{\mathrm{Sp}}
+\newcommand{\GO}{\mathrm{O}}
+\newcommand{\obs}[1]{\texttt{#1}}
+\newcommand{\lean}{Lean}
+\newcommand{\repo}{\url{https://github.com/BrianLi009/four-qubit-hyperbolic-quadric}}
+
+\title{The four-qubit hyperbolic quadric has contextuality degree 315}
+\author{[Author names and affiliations]}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+The contextuality degree of a configuration of Pauli observables is the least number of its contexts that any noncontextual assignment of $\pm1$ values must violate.
+The $135$ real four-qubit Pauli observables, with their $1575$ triples of pairwise commuting observables whose product is $\pm I$ as contexts, form the hyperbolic quadric $\Qp(7,2)$ of the symplectic polar space $W(7,2)$.
+From heuristic searches, Muller, Saniga, Giorgetti, Holweck and Kelleher conjectured that its contextuality degree is $315$, and that the unsatisfied contexts of every optimal assignment form a copy of the dual polar space $DW(5,2)$; Saniga \emph{et al.}\ described settling the degree as a computationally challenging task.
+We prove both conjectures.
+The lower bound has a short proof: every doily of the quadric, a generalised quadrangle $GQ(2,2)$, contains ten Peres--Mermin grids, each line lying in four of them, so every assignment violates at least three of its fifteen lines; since the orthogonal group permutes the doilies and acts transitively on the lines, every assignment violates at least a fifth of all $1575$ lines.
+An explicit assignment attains $315$.
+Equality forces every doily to fail on exactly one ruling of one of its grids, and an exhaustive SAT enumeration under this constraint shows that there are exactly $240$ optimal sets of violated lines, forming a single orbit of $\GO^+(8,2)$, each isomorphic to $DW(5,2)$.
+The same argument gives $\dg\ge\lceil L/5\rceil$ for every hyperbolic and elliptic quadric with $L$ lines in $N\ge3$ qubits, which is tight for $N=3$.
+Physically, the result is a state-independent noncontextuality inequality on $1575$ correlators whose classical bound $945$ is exact, against the quantum value $1575$.
+The theorem for the real quadric is formalised and kernel-checked in Lean~4.
+\end{abstract}
+
+\section{Introduction}
+The Kochen--Specker theorem~\cite{KS67,Bell66} rules out noncontextual hidden-variable models of quantum mechanics: there is no assignment of definite values to observables, independent of which compatible observables are measured alongside, that respects the functional relations quantum mechanics imposes on every set of commuting observables.
+The most transparent proofs use Pauli observables.
+In the Peres--Mermin square~\cite{Peres90,Mermin90,Mermin93} nine two-qubit Pauli observables are arranged in a $3\times3$ grid whose rows and columns are triples of commuting observables with product $+I$, except for one column with product $-I$. No assignment of $\pm1$ values satisfies all six constraints.
+Such state-independent proofs underlie experimental tests of contextuality~\cite{Cabello08,Kirchmair09,Amselem09} and connect contextuality to the power of quantum computation~\cite{Raussendorf13,Howard14}.
+
+The non-identity $N$-qubit Pauli observables, taken up to sign, are the points of the symplectic polar space $W(2N-1,2)$ of rank $N$ over $\F_2$, two observables commuting exactly when the corresponding points are orthogonal~\cite{SanigaPlanat07,Havlicek09,Thas09}.
+This dictionary has made finite geometry a natural language for observable-based contextuality~\cite{Holweck17,Trandafir22,Levay13,SanigaLevayPracna12}.
+Any family of totally isotropic lines, each line $\{A,B,AB\}$ carrying the sign of $A\cdot B\cdot AB=\pm I$, is a candidate proof of contextuality.
+De Boutray, Holweck, Giorgetti, Masson and Saniga~\cite{deBoutray22} introduced the \emph{contextuality degree}, the least number of contexts that a noncontextual assignment must violate, as a measure of how contextual such a configuration is.
+It governs both the classical bound of the associated noncontextuality inequality~\cite{Cabello10,Kelleher24} and the classical winning probability of the associated Mermin-type games~\cite{Arkhipov12,Kelleher24}.
+Computing it is a MAX-XOR-SAT problem, and exact values are known only for small configurations: the doily ($3$), the three-qubit space $W(5,2)$ ($63$) and its quadrics ($21$ and $9$)~\cite{deBoutray22,Muller22doilies,Saniga24hex}.
+
+For four qubits the problem has resisted computation.
+The hyperbolic quadric $\Qp(7,2)$ has $135$ points and $1575$ lines.
+Muller, Saniga, Giorgetti, de Boutray and Holweck~\cite[Table~1]{Muller23} could only show that its degree is at most $500$.
+Muller, Saniga, Giorgetti, Holweck and Kelleher~\cite[\S5.1.2]{Muller24} then found, with a heuristic search, assignments violating only $315$ lines, observed that the $315$ unsatisfied lines are isomorphic to the dual polar space $DW(5,2)$, and wrote: ``So, we do believe that $d^{hyp}_4=315$, with the understanding that the corresponding unsatisfied configurations are (always) isomorphic to $DW(5,2)$.''
+Saniga, Holweck, Kelleher, Muller, Giorgetti and de Boutray~\cite[p.~24]{Saniga24hex} single out a closely related question as ``computationally rather challenging'', whose affirmative answer ``would mean, among other things, that the degree of contextuality of a four-qubit hyperbolic quadric is 315''.
+Muller and Giorgetti~\cite[\S5.3]{MullerGiorgetti24} and Muller's thesis~\cite{MullerThesis} list $315$ as an upper bound only.
+
+\paragraph{Results.}
+We settle both parts of this conjecture.
+\begin{itemize}[leftmargin=*]
+\item \textbf{\Cref{thm:main}.} Every hyperbolic quadric of the four-qubit space, with its $1575$ lines as contexts, has contextuality degree exactly $315$.
+\item \textbf{\Cref{prop:ruling,thm:dw}.} In every optimal assignment, each of the $40\,320$ doilies of the quadric has exactly three violated lines, which form one ruling of one of its grids. There are exactly $240$ sets of lines that arise as the violated set of an optimal assignment; they form one orbit of the orthogonal group $\GO^+(8,2)$, and each is isomorphic to $DW(5,2)$. The first statement has a two-line proof; the second is computer-assisted.
+\item \textbf{\Cref{thm:general}.} For every $N\ge3$, every hyperbolic or elliptic quadric of the $N$-qubit space, with $L$ lines, has degree at least $\lceil L/5\rceil$. This is tight for $N=3$ and for the four-qubit hyperbolic quadric, and to our knowledge it gives the first lower bounds for quadrics with $N\ge5$ qubits.
+\item \textbf{\Cref{cor:inequality}.} The $1575$ contexts give a state-independent noncontextuality inequality with classical bound exactly $945$ and quantum value $1575$; equivalently, the associated single-context game has classical value exactly $4/5$.
+\end{itemize}
+
+The proof of the lower bound is short and needs no computation.
+It combines three classical ingredients: the parity argument behind the Peres--Mermin square; Sylvester's model of the generalised quadrangle $GQ(2,2)$, which shows that a doily contains ten grids covering each of its lines four times; and Witt's theorem, which makes the orthogonal group transitive on the lines of the quadric.
+Averaging over sub-configurations was used before by Saniga \emph{et al.}~\cite{Saniga24hex} and Muller \emph{et al.}~\cite{Muller24} to bound the degree of the whole space $W(2N-1,2)$, but not, as far as we know, for the quadrics, where it turns out to be tight.
+The rounding $\lceil 10/4\rceil=3$ inside each doily is what makes the bound tight: averaging over the $67\,200$ grids of the quadric directly gives only $\lceil1575/6\rceil=263$.
+
+We formalised the theorem for the real quadric (the observables with an even number of $Y$ factors) in Lean~4 with Mathlib~\cite{Lean4,Mathlib}; the kernel checks every finite fact, and the statement depends only on the standard axioms (\cref{sec:lean}).
+All code and certificates are available at \repo.
+
+\paragraph{Outline.}
+\Cref{sec:prelim} sets up the geometry and the symmetries of the problem.
+\Cref{sec:doily} proves that every doily of a quadric has degree at least $3$.
+\Cref{sec:main} proves the main theorem, \cref{sec:optimal} studies the optimal assignments, and \cref{sec:general} extends the lower bound to all quadrics.
+\Cref{sec:physics} discusses the physical consequences, \cref{sec:lean} the formal proof, and \cref{sec:open} open problems.
+
+\section{Pauli observables, quadrics and the contextuality degree}\label{sec:prelim}
+
+\subsection{The symplectic polar space}
+Write $\sigma_{00}=I$, $\sigma_{10}=X$, $\sigma_{01}=Z$, $\sigma_{11}=Y$ for the Pauli matrices.
+A vector $v=(x\mid z)\in V=\F_2^{2N}$ labels the Hermitian $N$-qubit Pauli observable
+\[P(v)=\sigma_{x_1z_1}\otimes\cdots\otimes\sigma_{x_Nz_N},\]
+and every Pauli observable is $\pm P(v)$ for a unique $v$.
+For $u,v\in V$ the products satisfy $P(u)P(v)=i^{\varphi(u,v)}P(u+v)$ for an exponent $\varphi(u,v)\in\mathbb Z/4$, which is the sum over the qubits of the single-qubit exponents ($XY=iZ$, $YZ=iX$, $ZX=iY$, and $-i$ for the reversed products).
+Consequently $P(u)$ and $P(v)$ commute if and only if the symplectic form
+\[B(u,v)=\sum_{j=1}^N\bigl(x_j(u)z_j(v)+z_j(u)x_j(v)\bigr)\]
+vanishes, and they anticommute otherwise.
+The points of $W(2N-1,2)$ are the nonzero vectors of $V$, that is the $4^N-1$ non-identity observables up to sign, and its lines are the triples $\{u,v,u+v\}$ with $B(u,v)=0$, that is the triples of pairwise commuting observables whose product is $\pm I$.
+
+\subsection{Quadrics and the real observables}
+The quadratic forms on $V$ with polar form $B$ are
+\[Q_a(v)=Q_0(v)+B(a,v)\quad(a\in V),\qquad Q_0(v)=\sum_{j=1}^N x_j(v)z_j(v),\]
+where $Q_0(v)$ counts the $Y$ factors of $P(v)$ modulo $2$.
+Since $P(v)^{\mathsf T}=(-1)^{Q_0(v)}P(v)$, the singular points of $Q_0$ are exactly the \emph{real} (symmetric) Pauli observables~\cite{SanigaLevayPracna12}.
+The form $Q_0$ is hyperbolic, an orthogonal sum of $N$ hyperbolic planes, and $Q_a(v)=Q_0(v+a)+Q_0(a)$, so $Q_a$ is hyperbolic when $Q_0(a)=0$ and elliptic when $Q_0(a)=1$.
+For four qubits there are $136$ hyperbolic quadrics $\Qp(7,2)$ and $120$ elliptic quadrics $\Qm(7,2)$.
+A hyperbolic quadric of $W(7,2)$ has $135$ points and $1575$ lines, with $35$ lines through each point and $3$ points on each line~\cite{HirschfeldThas16}.
+The lines of a quadric are the lines of $W(7,2)$ all of whose points are singular; two singular points $p\ne q$ are collinear on the quadric if and only if $B(p,q)=0$, since $Q(p+q)=Q(p)+Q(q)+B(p,q)$.
+
+\subsection{Contexts, signs and the degree}
+\begin{definition}
+A \emph{configuration} $\mathcal C$ is a set of points of $W(2N-1,2)$ together with a set of lines on them, the \emph{contexts}.
+The \emph{sign} of a context $C=\{u,v,u+v\}$ is the bit $s(C)$ with $P(u)P(v)P(u+v)=(-1)^{s(C)}I$.
+An \emph{assignment} is a map $x$ from the points to $\F_2$, the value $x(p)$ standing for the outcome $(-1)^{x(p)}$ of $P(p)$.
+It \emph{violates} $C$ if $x(u)+x(v)+x(u+v)\neq s(C)$, and the \emph{contextuality degree} $\dg\mathcal C$ is the least number of contexts violated by an assignment~\cite{deBoutray22}.
+\end{definition}
+
+A noncontextual hidden-variable model assigns to each observable a fixed outcome, and quantum mechanics requires the outcomes of $P(u),P(v),P(u+v)$ to multiply to $(-1)^{s(C)}$; so $\dg\mathcal C$ is the least number of these constraints that any such model must break.
+For the configuration $\mathcal H_a$ of all points and lines of the quadric $Q_a$ we write $\dg\mathcal H_a$.
+
+Two kinds of symmetry leave the degree unchanged.
+
+\begin{lemma}[Re-signing]\label{lem:resign}
+Replacing the observable $P(p)$ by $-P(p)$ toggles the sign of every context through $p$. The assignment $x+\delta_p$ (which changes the value at $p$ only) violates, after the replacement, exactly the contexts that $x$ violates before it. Hence the replacement preserves the degree.
+\end{lemma}
+
+\begin{lemma}[Clifford transport]\label{lem:clifford}
+Let $U$ be a Clifford unitary, with $UP(v)U^\dagger=(-1)^{\tau(v)}P(gv)$ for a symplectic map $g$ of $V$ and a function $\tau$.
+If $C$ is a context of $\mathcal C$, then $gC$ has sign $s(gC)=s(C)+\tau(u)+\tau(v)+\tau(u+v)$.
+Consequently $y(gv)=x(v)+\tau(v)$ violates $gC$ exactly when $x$ violates $C$, and $\dg g\mathcal C=\dg\mathcal C$.
+\end{lemma}
+\begin{proof}
+Conjugate $P(u)P(v)P(u+v)=(-1)^{s(C)}I$ by $U$.
+\end{proof}
+
+Every symplectic map of $V$ is induced by a Clifford unitary~\cite{Gottesman98,DehaeneDeMoor03}.
+For instance, for $r\in V$ the unitary $(I+iP(r))/\sqrt2$ induces the symplectic transvection $t_r(v)=v+B(v,r)\,r$: it fixes $P(v)$ when $B(v,r)=0$ and sends it to $iP(r)P(v)=\pm P(v+r)$ otherwise.
+If $Q_0(r)=0$ then $Q_0(t_rv)=Q_0(v)+B(v,r)=Q_r(v)$, so $t_r$ carries the quadric $Q_r$ onto $Q_0$.
+Together with \cref{lem:clifford}, this gives:
+
+\begin{corollary}\label{cor:allquadrics}
+All $136$ hyperbolic quadrics of $W(7,2)$ have the same contextuality degree, and so do all $120$ elliptic quadrics.
+\end{corollary}
+\begin{proof}
+For the hyperbolic quadrics, $t_r$ with $Q_0(r)=0$ carries $Q_r$ to $Q_0$.
+For the elliptic ones, $\Sp(8,2)$ is transitive on the quadratic forms of a given type with polar form $B$~\cite{Taylor92}.
+\end{proof}
+
+The $136$ hyperbolic quadrics fall into three classes by their number of negative lines ($532$, $604$ and $612$)~\cite{Muller23}; \cref{lem:resign,lem:clifford} show that this number is not an invariant of the degree problem.
+
+\section{Grids, doilies and their degree}\label{sec:doily}
+
+\begin{lemma}[Odd sets]\label{lem:odd}
+Let $\mathcal F$ be a family of contexts in which every point occurs an even number of times and whose signs have odd sum. Then every assignment violates an odd number, and in particular at least one, of the contexts of $\mathcal F$.
+\end{lemma}
+\begin{proof}
+Modulo $2$, the number of violated contexts is $\sum_{C\in\mathcal F}\bigl(\sum_{p\in C}x(p)+s(C)\bigr)=\sum_C\sum_{p\in C}x(p)+\sum_Cs(C)=0+1$.
+\end{proof}
+
+A \emph{grid} is a generalised quadrangle $GQ(2,1)$: nine points $p_{ij}$ ($i,j\in\{1,2,3\}$) and six lines, the three rows $\{p_{i1},p_{i2},p_{i3}\}$ and the three columns $\{p_{1j},p_{2j},p_{3j}\}$. The rows form one \emph{ruling} and the columns the other.
+
+\begin{lemma}[Peres--Mermin parity]\label{lem:mermin}
+Let nine Pauli observables $P_{ij}$ form a grid in which every row and every column is a context, and in which $P_{ij}$ and $P_{kl}$ anticommute whenever $i\ne k$ and $j\ne l$. Then the six contexts have signs of odd sum.
+\end{lemma}
+\begin{proof}
+Let $r_i$ and $c_j$ be the signs of the rows and the columns, so that the products of the rows and the columns are $(-1)^{r_i}I$ and $(-1)^{c_j}I$.
+The product $M=P_{11}P_{12}P_{13}P_{21}\cdots P_{33}$ in row-major order equals $(-1)^{r_1+r_2+r_3}I$.
+Reordering it into column-major order $P_{11}P_{21}P_{31}P_{12}\cdots P_{33}$ exchanges the relative order of $P_{ij}$ and $P_{kl}$ exactly when $i<k$ and $j>l$.
+There are nine such pairs and each anticommutes, so the column-major product is $(-1)^9M$.
+It also equals $(-1)^{c_1+c_2+c_3}I$, so $\sum r_i+\sum c_j$ is odd.
+\end{proof}
+
+By \cref{lem:odd} (each point lies on one row and one column), every assignment violates an odd number of the six lines of such a grid.
+This is the familiar argument for the Peres--Mermin square~\cite{Peres90,Mermin90}; it also shows that every grid of $W(2N-1,2)$ is contextual~\cite{Holweck17}.
+
+A \emph{doily} of a quadric $Q$ of $W(2N-1,2)$ is the configuration of singular points and lines of $Q$ inside a $5$-dimensional subspace $U\le V$ on which $Q$ is nondegenerate.
+It is a parabolic quadric $\mathcal Q(4,2)$, a generalised quadrangle $GQ(2,2)$ with $15$ points and $15$ lines~\cite{PayneThas09,HirschfeldThas16}.
+
+\begin{lemma}\label{lem:collinear}
+Let $D$ be a doily of a quadric and $G\subseteq D$ a grid (nine points and six lines of $D$ forming a $GQ(2,1)$). Two points of $G$ that are not collinear in $G$ anticommute.
+\end{lemma}
+\begin{proof}
+Let $p,q\in G$ be non-collinear in $G$.
+Two points of $D$ commute if and only if they are collinear in $D$, because $p+q\in U$ and $B(p,q)=0$ means that $\{p,q,p+q\}$ is a line of the quadric.
+Suppose $p,q$ are collinear in $D$.
+Let $M$ be a line of $G$ through $q$; then $p\notin M$.
+In the grid, $p$ is collinear with exactly one point $m\ne q$ of $M$.
+So in $D$ the point $p$ is collinear with two points $q,m$ of the line $M$, contradicting the axiom of a generalised quadrangle.
+\end{proof}
+
+\begin{lemma}\label{lem:sylvester}
+A doily contains ten grids such that every line of the doily lies in exactly four of them and any two intersecting lines lie in exactly two of them.
+\end{lemma}
+\begin{proof}
+$GQ(2,2)$ is unique up to isomorphism and has Sylvester's model~\cite{PayneThas09}: the points are the $15$ two-element subsets (duads) of $\{1,\dots,6\}$ and the lines are the $15$ partitions of $\{1,\dots,6\}$ into three duads (synthemes), with inclusion as incidence.
+For a partition $\{A,B\}$ of $\{1,\dots,6\}$ into two triples, the $9$ duads meeting both $A$ and $B$ correspond to $A\times B$, and the synthemes made of such duads to the $6$ bijections $A\to B$.
+Two bijections $\pi,\rho$ share $|\{a:\pi(a)=\rho(a)\}|$ duads. Identifying $A$ and $B$ with $\{1,2,3\}$, this is $0$ when $\rho^{-1}\pi$ is a $3$-cycle and $1$ when it is a transposition.
+So the even bijections are three pairwise disjoint lines covering the nine duads, and so are the odd ones, and every even bijection meets every odd one in exactly one duad: the nine duads and six synthemes form a grid.
+This gives ten grids, one for each of the $\binom63/2=10$ partitions.
+A syntheme $\{ab,cd,ef\}$ lies in the grid of $\{A,B\}$ exactly when each of its duads meets both $A$ and $B$, which leaves $2^3/2=4$ partitions.
+Two synthemes sharing the duad $ab$, say $\{ab,cd,ef\}$ and $\{ab,ce,df\}$, both lie in the grid of $\{A,B\}$ iff $a,b$ are separated, $c$ is separated from $d$ and $e$, and $f$ from $d$ and $e$, which leaves the two partitions $\{\{a,c,f\},\{b,d,e\}\}$ and $\{\{b,c,f\},\{a,d,e\}\}$.
+\end{proof}
+
+\begin{remark}
+These ten are in fact all the grids of the doily, but only the stated multiplicities are used below. We also checked, on all $40\,320$ doilies of the four-qubit hyperbolic quadric, that each has exactly ten grids with these multiplicities (\cref{app:computations}).
+\end{remark}
+
+\begin{proposition}\label{prop:doily}
+Every doily of a quadric of $W(2N-1,2)$, with the signs inherited from the Pauli operators, has contextuality degree at least $3$. If an assignment violates exactly three of its lines, then they are pairwise disjoint and form a ruling of one of its grids, and each of the other nine grids contains exactly one of them.
+\end{proposition}
+\begin{proof}
+Let $x$ be an assignment and $V_D$ the set of violated lines of the doily $D$.
+Let $G$ run over the ten grids of \cref{lem:sylvester}.
+By \cref{lem:collinear,lem:mermin,lem:odd}, every $G$ meets $V_D$ in an odd number of lines, and by \cref{lem:sylvester}, $\sum_G|V_D\cap G|=4|V_D|$.
+The left side is a sum of ten odd numbers, so $4|V_D|\ge10$ and $|V_D|\ge3$.
+If $|V_D|=3$, the ten odd numbers sum to $12$, so exactly one grid $G^*$ contains three violated lines and the other nine contain one each.
+Two intersecting violated lines would lie in two common grids (\cref{lem:sylvester}), each then containing at least two, hence three, violated lines; so the three violated lines are pairwise disjoint.
+They lie in $G^*$, and three pairwise disjoint lines of a grid form a ruling.
+\end{proof}
+
+The bound is attained: every doily has degree exactly $3$~\cite[Prop.~1]{Muller22doilies}, \cite{deBoutray22}, which we also checked by brute force over the $2^{15}$ assignments of each doily of the four-qubit hyperbolic quadric.
+
+\section{The main theorem}\label{sec:main}
+
+\begin{theorem}\label{thm:main}
+Every hyperbolic quadric $\Qp(7,2)$ of the four-qubit space, with its $1575$ lines as contexts, has contextuality degree exactly $315$.
+\end{theorem}
+
+\begin{proof}
+\emph{Lower bound.}
+Let $Q$ be a hyperbolic quadric and $\mathcal D$ the set of its doilies.
+The orthogonal group $\GO(Q)$ maps doilies to doilies, and it acts transitively on the lines of $Q$ by Witt's theorem~\cite{Taylor92}, since any linear isometry between two totally singular $2$-spaces extends to $V$.
+The set $\mathcal D$ is not empty (an example is given in \cref{app:witness}); so every line lies in the same number $r\ge1$ of doilies, and counting incidences gives $15|\mathcal D|=1575\,r$.
+For an assignment $x$ with violated set $\mathcal V$, \cref{prop:doily} gives
+\[r\,|\mathcal V|=\sum_{D\in\mathcal D}|\mathcal V\cap D|\ \ge\ 3|\mathcal D|,\qquad\text{so}\qquad|\mathcal V|\ \ge\ \frac{3|\mathcal D|}{r}=\frac{3\cdot1575}{15}=315.\]
+(In fact $|\mathcal D|=40\,320$ and $r=384$.)
+
+\emph{Upper bound.}
+The assignment of \cref{app:witness} violates exactly $315$ of the $1575$ lines of the real quadric $Q_0$.
+Its existence was first shown by Muller \emph{et al.}~\cite{Muller24}; ours was found independently by local search.
+By \cref{cor:allquadrics}, every hyperbolic quadric has an assignment with $315$ violations; explicitly, for $Q_0(r)=0$ the assignment $y(v)=x(t_rv)+\tau(v)$ of \cref{lem:clifford} works for $Q_r$, which we also checked for all $135$ such $r$.
+\end{proof}
+
+\begin{remark}[The role of the doily]
+Averaging with grids instead of doilies gives only $|\mathcal V|\ge1575/6$, that is $\dg\ge263$, because a grid can have a single violated line out of six.
+The doily gains from the rounding $\lceil10/4\rceil=3$.
+Its violated fraction $3/15=1/5$ is exactly the violated fraction $315/1575$ of the quadric, so the lower bound is tight.
+\end{remark}
+
+\section{The optimal assignments}\label{sec:optimal}
+
+Equality in the averaging argument constrains every optimal assignment locally.
+
+\begin{proposition}\label{prop:ruling}
+Let $x$ be an assignment of a hyperbolic quadric $\Qp(7,2)$ violating exactly $315$ lines. Then every one of its $40\,320$ doilies contains exactly three violated lines; they are pairwise disjoint and form a ruling of one of the ten grids of the doily, and each of the other nine grids contains exactly one of them.
+Conversely, if $\mathcal F$ is a family of doilies covering every line equally often, an assignment violating exactly three lines of every doily of $\mathcal F$ is optimal.
+\end{proposition}
+\begin{proof}
+If $|\mathcal V|=315$, the inequality $\sum_D|\mathcal V\cap D|\ge3|\mathcal D|$ is an equality, and each term is at least $3$, so each term is $3$. Apply \cref{prop:doily}.
+Conversely, if $\mathcal F$ covers every line $r'$ times and every doily of $\mathcal F$ has three violated lines, then $r'|\mathcal V|=3|\mathcal F|$ and $15|\mathcal F|=1575\,r'$, so $|\mathcal V|=315$.
+\end{proof}
+
+The converse turns the global optimisation problem over $2^{135}$ assignments into local constraints, each on the fifteen lines of a doily, and this makes a complete enumeration easy.
+
+\begin{theorem}[computer-assisted]\label{thm:dw}
+For the real quadric $Q_0$ there are exactly $240$ sets of lines that are the violated set of an optimal assignment, and each is the violated set of exactly $256$ assignments, so that there are $61\,440$ optimal assignments.
+The $240$ sets form a single orbit of the orthogonal group $\GO^+(8,2)$ acting on the lines.
+Each of them, as a point--line geometry, is isomorphic to the dual polar space $DW(5,2)$: it has $315$ lines through all $135$ points, with $7$ lines through every point.
+By \cref{lem:clifford} the same holds for every hyperbolic quadric of $W(7,2)$.
+\end{theorem}
+
+\begin{proof}[Method]
+\emph{Enumeration.}
+We encode an assignment by $135$ Boolean variables and introduce, for each line $C$, a variable for ``$C$ is violated'', defined by eight clauses expressing the XOR.
+We use the family $\mathcal F$ of $2520$ doilies of the \lean{} proof (\cref{sec:lean}), which covers every line exactly $24$ times, and require for each of its doilies that exactly three of its fifteen lines are violated, with a sequential-counter cardinality encoding.
+By \cref{prop:ruling} the models of this formula are exactly the optimal assignments.
+We add $37\,800$ binary clauses forbidding two intersecting lines of a common doily (among all $40\,320$) to be both violated; by \cref{prop:doily,prop:ruling} they hold in every optimal assignment, so they do not change the models, but they make the search much faster.
+We enumerate the distinct violated sets with the SAT solver CaDiCaL~\cite{CaDiCaL} through PySAT~\cite{PySAT}, adding after each one a clause that forbids it.
+The enumeration ends after $240$ sets, in under a minute, with an unsatisfiable formula of $413\,520$ clauses.
+We certified this unsatisfiability independently: CaDiCaL~3.0 produced a DRAT proof, and \texttt{drat-trim}~\cite{DRATtrim} verified it.
+\emph{Gauge.}
+The assignments that violate no line are those $f$ with $f(u)+f(v)+f(u+v)=0$ on every line; the line--point incidence matrix has rank $127$ over $\F_2$, so they form a space of dimension $8$, namely the restrictions of the $256$ linear functionals, and each violated set comes from exactly $2^8$ assignments.
+\emph{Orbit.}
+The orthogonal group $\GO^+(8,2)$ of $Q_0$ is generated by the $120$ transvections $t_r$ with $Q_0(r)=1$ (reflections), each induced by a Clifford unitary~\cite{Taylor92}.
+By \cref{lem:clifford} each maps violated sets of optimal assignments to violated sets of optimal assignments.
+Starting from the violated set of our witness, the orbit under these generators has exactly $240$ elements, and it coincides with the enumerated list.
+Since $|\GO^+(8,2)|=348\,364\,800$, the stabiliser of a violated set has order $1\,451\,520=|\Sp(6,2)|$, the order of the automorphism group of $DW(5,2)$.
+\emph{Isomorphism.}
+The dual polar space $DW(5,2)$ has as points the $135$ planes (maximal totally isotropic subspaces) of $W(5,2)$ and as lines its $315$ lines~\cite{DeBruyn06}.
+For each of the $240$ violated sets, a backtracking search finds a bijection from the planes of $W(5,2)$ to the points of $Q_0$ mapping the lines of $W(5,2)$ onto the violated lines, and we check it directly (this also follows from the orbit statement). The isomorphism for our witness is stored with the code.
+\end{proof}
+
+\Cref{thm:dw} confirms the second half of the conjecture of~\cite{Muller24}: the unsatisfied configurations of the four-qubit hyperbolic quadric are \emph{always} isomorphic to $DW(5,2)$.
+Muller \emph{et al.}\ explained why one should expect this: $DW(5,2)$ contains $120$ split Cayley hexagons of order two, as many as the quadric contains three-qubit subspaces $W(5,2)$, and the unsatisfied configurations of $W(5,2)$ are exactly the classically embedded hexagons~\cite{Muller24,Saniga24hex}.
+
+\begin{remark}[Optimal assignments are not quadratic]
+The assignments of the form $x(v)=q(v)$, for a quadratic form $q$ on $V$, violate the line $\{u,v,u+v\}$ exactly when $\beta_q(u,v)\ne s(\{u,v,u+v\})$, where $\beta_q$ is the polar form of $q$.
+An exhaustive search over all $2^{28}$ alternating forms $\beta_q$ shows that none violates fewer than $532$ lines, the number of negative lines, attained by $x=0$.
+So no optimal assignment is quadratic.
+\end{remark}
+
+\section{A lower bound for all quadrics}\label{sec:general}
+
+The argument of \cref{sec:main} uses only the doilies of the quadric and the transitivity of its orthogonal group on lines.
+
+\begin{theorem}\label{thm:general}
+Let $N\ge3$ and let $\mathcal C$ be a hyperbolic quadric $\Qp(2N-1,2)$, an elliptic quadric $\Qm(2N-1,2)$, or the whole space $W(2N-1,2)$, with all its $L$ lines as contexts. Then $\dg\mathcal C\ge\lceil L/5\rceil$.
+\end{theorem}
+\begin{proof}
+For a quadric $Q$, a nondegenerate $6$-dimensional subspace of type $+$ or $-$ exists for $N\ge3$ (take three of the hyperbolic or elliptic planes of an orthogonal decomposition), and its quadric $\mathcal Q^\pm(5,2)$ contains parabolic sections $\mathcal Q(4,2)$; so $Q$ has doilies.
+$\GO(Q)$ is transitive on the lines of $Q$ by Witt's theorem, and \cref{prop:doily} applies to every doily.
+The argument of \cref{thm:main} gives $|\mathcal V|\ge 3L/15$.
+For $W(2N-1,2)$, use the doilies of all its quadrics: $\Sp(2N,2)$ permutes them and is transitive on the lines.
+\end{proof}
+
+For $W(2N-1,2)$ this recovers the bound $(4^N-1)(4^{N-1}-1)/15$ of~\cite[eq.~(11)]{Muller24}, which was obtained by a recursion over subspaces.
+The number of lines follows from the fact that the lines of a quadric through a point $p$ correspond to the points of the quadric $p^\perp/p$ of rank one less: $L=n_N\,n_{N-1}/3$, with $n_N=(2^N-\varepsilon)(2^{N-1}+\varepsilon)$ points on $\mathcal Q^\varepsilon(2N-1,2)$.
+\Cref{tab:general} compares the bound with the known exact values and with the heuristic upper bounds of~\cite{Muller24}.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{@{}rlrrrr@{}}
+\toprule
+$N$ & configuration & points & lines $L$ & $\lceil L/5\rceil$ & known value or upper bound \\
+\midrule
+3 & $\Qp(5,2)$ & 35 & 105 & 21 & $=21$~\cite{deBoutray22} \\
+3 & $\Qm(5,2)$ & 27 & 45 & 9 & $=9$~\cite{deBoutray22} \\
+3 & $W(5,2)$ & 63 & 315 & 63 & $=63$~\cite{Saniga24hex} \\
+4 & $\Qp(7,2)$ & 135 & 1\,575 & 315 & $=315$ (\cref{thm:main}) \\
+4 & $\Qm(7,2)$ & 119 & 1\,071 & 215 & $\le315$~\cite{Muller24} \\
+4 & $W(7,2)$ & 255 & 5\,355 & 1\,071 & $\le1\,575$~\cite{Muller24} \\
+5 & $\Qp(9,2)$ & 527 & 23\,715 & 4\,743 & $\le6\,975$~\cite{Muller24} \\
+5 & $\Qm(9,2)$ & 495 & 19\,635 & 3\,927 & $\le7\,087$~\cite{Muller24} \\
+6 & $\Qp(11,2)$ & 2\,079 & 365\,211 & 73\,043 & $\le132\,391$~\cite{Muller24} \\
+6 & $\Qm(11,2)$ & 2\,015 & 332\,475 & 66\,495 & $\le131\,700$~\cite{Muller24} \\
+7 & $\Qp(13,2)$ & 8\,255 & 5\,720\,715 & 1\,144\,143 & $\le2\,331\,191$~\cite{Muller24} \\
+7 & $\Qm(13,2)$ & 8\,127 & 5\,458\,635 & 1\,091\,727 & $\le2\,294\,580$~\cite{Muller24} \\
+\bottomrule
+\end{tabular}
+\caption{The doily bound of \cref{thm:general} against the known values. The quadric bounds for $N\ge5$ and for $\Qm(7,2)$ are, to our knowledge, the first lower bounds stated for these configurations.}
+\label{tab:general}
+\end{table}
+
+The bound is tight in the four cases where the degree is known.
+In the other cases the heuristic upper bounds are much larger, between $0.29L$ and $0.42L$.
+Whether the doily bound is tight for $\Qp(9,2)$, as it is for $\Qp(5,2)$ and $\Qp(7,2)$, is the natural next question.
+
+\section{Physical consequences}\label{sec:physics}
+
+\paragraph{A noncontextuality inequality with an exact classical bound.}
+For a configuration with contexts $C=\{u,v,u+v\}$, consider the sum of the signed correlators
+\[\chi=\sum_C(-1)^{s(C)}\bigl\langle P(u)P(v)P(u+v)\bigr\rangle,\]
+where each correlator is estimated by measuring the three commuting observables of $C$ jointly or in sequence~\cite{Cabello08,Cabello10}.
+Quantum mechanics gives $\chi=N_C$, the number of contexts, in every state, because $(-1)^{s(C)}P(u)P(v)P(u+v)=I$.
+A noncontextual model that assigns the outcomes $(-1)^{x(p)}$ satisfies the constraints of the non-violated contexts and violates the others, so $\chi\le N_C-2\dg\mathcal C$, and mixtures of such models do no better~\cite{Kelleher24}.
+
+\begin{corollary}\label{cor:inequality}
+For the $1575$ contexts of a four-qubit hyperbolic quadric, every noncontextual hidden-variable model satisfies $\chi\le945$, the bound is attained, and quantum mechanics gives $\chi=1575$ in every four-qubit state.
+Equivalently, in the game in which a referee asks for the outcomes of the three observables of a uniformly random context and the player wins if their product has the quantum-mechanical sign, the best noncontextual strategy wins with probability exactly $4/5$, and the quantum strategy wins with certainty.
+\end{corollary}
+
+For the real quadric $Q_0$ all $135$ observables are real symmetric matrices, so the test needs only rebit-type measurements, which suits implementations with real amplitudes.
+The ratio of the classical to the quantum value, $945/1575=3/5$, is the same as for the doily ($9/15$), the three-qubit hyperbolic quadric ($63/105$) and the generalised quadrangle $GQ(2,4)=\Qm(5,2)$ ($27/45$)~\cite{Kelleher24}.
+So, although $\Qp(7,2)$ has a hundred times more contexts than the doily, per context it is not more contextual: under white noise that scales every correlator by a visibility $\eta$, the inequality is violated exactly when $\eta>3/5$, as for the doily.
+By \cref{thm:general}, every quadric of $N\ge3$ qubits violates at least a fifth of its contexts in every noncontextual model, so its ratio is at most $3/5$; the open question is which of them have a violated fraction strictly above $1/5$, that is a ratio strictly below $3/5$.
+The heuristic upper bounds of~\cite{Muller24} for $W(7,2)$, $\Qm(7,2)$ and $\Qp(9,2)$ are all exactly $5/17$ of their lines, which leaves open a ratio as low as $7/17$.
+
+\paragraph{Where the contextuality sits.}
+\Cref{prop:ruling} says that in every optimal noncontextual model, the failures are spread perfectly evenly: each doily of the quadric fails on exactly one ruling of one of its grids.
+\Cref{thm:dw} adds that the failures form one rigid geometric object, a $DW(5,2)$, unique up to the symmetry of the quadric.
+This is the four-qubit analogue of the three-qubit picture of~\cite{Saniga24hex}, where the unsatisfied lines of $W(5,2)$ always form a classically embedded split Cayley hexagon.
+
+\section{Formal verification}\label{sec:lean}
+We formalised the theorem for $Q_0$ in Lean~4 (v4.35.0-rc2) with Mathlib~\cite{Lean4,Mathlib}.
+The final statement is
+\begin{center}
+\texttt{theorem degree\_eq\_315 : Contextuality.Pauli.degree 0 = 315}
+\end{center}
+where \texttt{degree w} is the least number of violated contexts of the quadric $Q_w$ over all assignments.
+\texttt{Basic.lean} defines points as numbers $v<256$, the symplectic form, the quadratic forms $Q_w$, the phase exponent $\varphi$, the contexts (computed inside Lean by filtering pairs of points), their signs from $\varphi$, violation and the degree.
+\texttt{PhaseMatrix.lean} proves that $\varphi$ is the exponent in the product of the actual $16\times16$ Pauli matrices over $\mathbb C$ (\texttt{pauliMat\_mul}), so that the sign of every context is the sign of the operator product (\texttt{context\_product}).
+\texttt{OddSets.lean} proves \cref{lem:odd}.
+
+The lower bound uses a smaller family than all $40\,320$ doilies: the $2520$ doilies forming the union of the orbits of the qubit permutations $S_4$ on a selected set, which cover every line exactly $24$ times.
+For each of them the data lists the fifteen lines in the order of a fixed labelling of $GQ(2,2)$, with the ten grids at fixed positions.
+The kernel checks by \texttt{decide +kernel} that the keys of all these lines are a permutation of the $1575$ contexts, each repeated $24$ times, that each of the ten grids of each doily is an odd set (its six lines use every point an even number of times and their signs sum to $1$), and that each position lies in four grids.
+Then $24|\mathcal V|\ge3\cdot2520$ gives $|\mathcal V|\ge315$, and a kernel evaluation of the witness gives $315$.
+Nothing produced by the scripts that generate the data is trusted: the sorting of the $37\,800$ keys is checked through a permutation lemma, and every property of the data used in the proof is re-evaluated by the kernel.
+A single kernel evaluation of these checks needed about $10$\,GB of memory; splitting them into chunks combined by permutation lemmas reduced the build to under ten minutes and $3$\,GB on a laptop.
+\texttt{\#print axioms degree\_eq\_315} reports only \texttt{propext}, \texttt{Classical.choice} and \texttt{Quot.sound}.
+
+The formalisation covers the real quadric $Q_0$. The other $135$ hyperbolic quadrics follow from \cref{cor:allquadrics}, which we checked by computer but did not formalise.
+\Cref{thm:dw} is not formalised.
+
+\section{Open problems}\label{sec:open}
+\begin{enumerate}[leftmargin=*]
+\item \emph{The elliptic quadric and the whole space.} For four qubits, $215\le\dg\Qm(7,2)\le315$ and $1071\le\dg W(7,2)\le1575$ from \cref{thm:general} and~\cite{Muller24}. Every line of $W(7,2)$ lies on $24$ of the $120$ elliptic quadrics, so $\dg\Qm(7,2)=315$ would give $\dg W(7,2)\ge 120\cdot315/24=1575$ and hence equality. The doily bound cannot reach $315$ here; larger sub-configurations are needed. For instance, a computer-assisted computation, which we will report separately, shows that the $756$ lines of $\Qm(7,2)$ outside a parabolic section have degree $216$, which gives $\dg\Qm(7,2)\ge306$ and $\dg W(7,2)\ge1530$.
+\item \emph{Five qubits.} Is $\dg\Qp(9,2)=4743$? The heuristic upper bound $6975$ of~\cite{Muller24} is far above.
+\item \emph{A conceptual proof of \cref{thm:dw}.} \Cref{prop:ruling} characterises the optimal violated sets by local conditions on doilies. Is there a direct proof that these conditions force a $DW(5,2)$, for instance through the Lagrangian Grassmannian map from the planes of $W(5,2)$ to the points of $\Qp(7,2)$~\cite{Holweck14,Muller24}?
+\item \emph{Higher rank.} Does a hyperbolic quadric $\Qp(2N-1,2)$ have degree $L/5$ whenever $5$ divides $L$, and are its optimal violated sets again a single orbit?
+\end{enumerate}
+
+\section*{Code and data availability}
+All scripts, the witness, the SAT certificates and the Lean development are at \repo; \cref{app:computations} lists what each checks.
+
+\appendix
+
+\section{The witness and an example doily}\label{app:witness}
+The following assignment of $Q_0$ violates exactly $315$ of its $1575$ lines. It gives the value $1$ (outcome $-1$) to the $71$ observables below and $0$ (outcome $+1$) to the other $64$ real four-qubit observables.
+\begin{center}
+\small\ttfamily
+\begin{tabular}{@{}*{12}{l}@{}}
+IIIX & IIIZ & IIXX & IIXZ & IIZX & IIZZ & IXIX & IXIZ & IXXZ & IXZX & IXZZ & IYIY \\
+IYYI & IYYX & IYZY & IZII & IZIZ & IZXI & IZYY & IZZZ & XIII & XIIX & XIXX & XIYY \\
+XIZI & XXII & XXXI & XXXX & XXYY & XXZI & XYXY & XYYZ & XZII & XZXI & XZXZ & XZZI \\
+XZZX & YIIY & YIXY & YIYI & YIYZ & YXIY & YXXY & YXYI & YXZY & YYII & YYXI & YYZI \\
+YZYX & YZZY & ZIIX & ZIIZ & ZIXX & ZIXZ & ZIZX & ZXIX & ZXIZ & ZXXX & ZXXZ & ZXYY \\
+ZXZX & ZXZZ & ZYIY & ZYXY & ZYYI & ZYZY & ZZII & ZZXI & ZZYY & ZZZI & ZZZZ &
+\end{tabular}
+\end{center}
+The $315$ violated lines pass through every point, seven through each, and form a $DW(5,2)$ (\cref{thm:dw}).
+
+An example of a doily of $Q_0$: the singular points of the subspace spanned by \obs{XIII}, \obs{IXII}, \obs{ZIII}, \obs{IZIX} and \obs{YIYI}. Its fifteen points are
+\obs{XIII}, \obs{IXII}, \obs{XXII}, \obs{ZIII}, \obs{ZXII}, \obs{IZIX}, \obs{XZIX}, \obs{ZZIX}, \obs{YYIX}, \obs{YIYI}, \obs{YXYI}, \obs{IYYX}, \obs{XYYX}, \obs{YZYX}, \obs{ZYYX},
+and three of its fifteen lines are negative: $\{\obs{XXII},\obs{ZZIX},\obs{YYIX}\}$, $\{\obs{ZXII},\obs{XYYX},\obs{YZYX}\}$ and $\{\obs{XZIX},\obs{YXYI},\obs{ZYYX}\}$.
+
+\section{Computations}\label{app:computations}
+All computations run on a laptop. The scripts are in the repository.
+\begin{itemize}[leftmargin=*]
+\item \texttt{code/verify\_facts.py} (under a minute) recomputes every finite fact used above: the numbers of quadrics, points, lines and negative lines; the signs from the phase rule and from $16\times16$ matrix products; the $40\,320$ doilies of $Q_0$ and their $384$-fold cover of the lines; the ten grids of each doily, the four grids through each line and the two common grids of two intersecting lines; the oddness of all $67\,200$ grids and the anticommutation of their non-collinear points; the witness and its structure (seven violated lines through each point; in each doily, three violated lines forming a grid ruling); and the transport of the witness to all $136$ hyperbolic quadrics. With \texttt{-{}-brute} it also computes the degree $3$ of every doily over its $2^{15}$ assignments.
+\item \texttt{code/independent\_check.py} is a second implementation, written separately, of the counts, the doily bound and the witness, with signs from the Pauli multiplication table.
+\item \texttt{code/enumerate\_optimal.py} (under a minute) performs the SAT enumeration of \cref{thm:dw} and writes the final formula; \texttt{code/drat/} records its DRAT check. \texttt{code/optimal\_structure.py} computes the orbit of the witness's violated set, checks by linear algebra over $\F_2$ that every set in the orbit is the violated set of an assignment, compares the orbit with the SAT list, and checks the stored isomorphism with $DW(5,2)$.
+\item \texttt{code/general\_bounds.py} computes \cref{tab:general}, counting points and lines directly for $N\le5$.
+\item \texttt{code/quadratic/} contains the exhaustive search over quadratic assignments.
+\item \texttt{lean/} contains the Lean development and the scripts that generate its data files.
+\end{itemize}
+
+\bibliographystyle{plain}
+\bibliography{refs}
+\end{document}

@@ -1,0 +1,6 @@
+'Contextuality.Pauli.Q8Plus.degree_eq_315' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Contextuality.Pauli.Q8Plus.le_numViolated' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Contextuality.Pauli.Q8Plus.witness_check' depends on axioms: [propext, Quot.sound]
+'Contextuality.Pauli.Q8Plus.contexts_length' depends on axioms: [propext, Quot.sound]
+'Contextuality.Pauli.context_product' depends on axioms: [propext, Classical.choice, Quot.sound]
+'Contextuality.Pauli.pauliMat_mul' depends on axioms: [propext, Classical.choice, Quot.sound]

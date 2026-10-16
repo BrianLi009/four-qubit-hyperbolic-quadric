@@ -1,0 +1,18 @@
+name = "QuadricDegree"
+version = "0.1.0"
+keywords = ["math"]
+defaultTargets = ["QuadricDegree"]
+
+[leanOptions]
+pp.unicode.fun = true
+relaxedAutoImplicit = false
+maxSynthPendingDepth = 3
+linter.unusedSectionVars = false
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "045acef0f761280401116e3801cb78ed1b2e716b"
+
+[[lean_lib]]
+name = "QuadricDegree"
