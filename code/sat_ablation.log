@@ -1,0 +1,67 @@
+=== --family=lean --no-pairs
+family: 2520 doilies covering each of the 1575 lines 24 times
+formula: 183150 variables (135 points, 1575 lines, 181440 auxiliary); 375480 clauses (12600 XOR, 362880 cardinality, 0 pair); built in 0 s
+  20 sets, 3 s
+  40 sets, 5 s
+  60 sets, 8 s
+  80 sets, 11 s
+  100 sets, 14 s
+  120 sets, 16 s
+  140 sets, 20 s
+  160 sets, 23 s
+  180 sets, 27 s
+  200 sets, 32 s
+  220 sets, 35 s
+  240 sets, 44 s
+wall 1800 s (limit 1800 s)
+=== --family=all --no-pairs
+family: 40320 doilies covering each of the 1575 lines 384 times
+formula: 2904750 variables (135 points, 1575 lines, 2903040 auxiliary); 5818680 clauses (12600 XOR, 5806080 cardinality, 0 pair); built in 6 s
+  20 sets, 85 s
+  40 sets, 143 s
+  60 sets, 191 s
+  80 sets, 244 s
+  100 sets, 290 s
+  120 sets, 330 s
+  140 sets, 379 s
+  160 sets, 437 s
+  180 sets, 502 s
+  200 sets, 574 s
+  220 sets, 690 s
+  240 sets, 1363 s
+exactly 240 optimal violated sets; last set found at 1363.1 s, final unsatisfiability proved at 1447.1 s (final call 83.9 s)
+wall 1453 s (limit 1800 s)
+=== --family=lean
+family: 2520 doilies covering each of the 1575 lines 24 times
+formula: 183150 variables (135 points, 1575 lines, 181440 auxiliary); 413280 clauses (12600 XOR, 362880 cardinality, 37800 pair); built in 6 s
+  20 sets, 4 s
+  40 sets, 5 s
+  60 sets, 6 s
+  80 sets, 9 s
+  100 sets, 11 s
+  120 sets, 13 s
+  140 sets, 14 s
+  160 sets, 16 s
+  180 sets, 17 s
+  200 sets, 20 s
+  220 sets, 23 s
+  240 sets, 29 s
+exactly 240 optimal violated sets; last set found at 29.1 s, final unsatisfiability proved at 31.0 s (final call 1.9 s)
+wall 37 s (limit 1800 s)
+=== --family=all
+family: 40320 doilies covering each of the 1575 lines 384 times
+formula: 2904750 variables (135 points, 1575 lines, 2903040 auxiliary); 5856480 clauses (12600 XOR, 5806080 cardinality, 37800 pair); built in 8 s
+  20 sets, 55 s
+  40 sets, 100 s
+  60 sets, 162 s
+  80 sets, 178 s
+  100 sets, 189 s
+  120 sets, 203 s
+  140 sets, 215 s
+  160 sets, 237 s
+  180 sets, 261 s
+  200 sets, 280 s
+  220 sets, 308 s
+  240 sets, 403 s
+exactly 240 optimal violated sets; last set found at 402.9 s, final unsatisfiability proved at 407.0 s (final call 4.1 s)
+wall 416 s (limit 1800 s)

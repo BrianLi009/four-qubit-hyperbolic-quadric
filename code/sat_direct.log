@@ -1,0 +1,8 @@
+=== maxsat
+MaxSAT: 12600 hard clauses, 1575 soft clauses
+(stopped by the time limit)
+wall 1800 s (limit 1800 s)
+=== card
+SAT: 18562 variables, 1268978 clauses (at most 314 violated lines)
+(stopped by the time limit)
+wall 1800 s (limit 1800 s)

@@ -16,3 +16,5 @@ lean/gen/order.json
 *.toc
 *.pdf
 code/witness_found.json
+!code/sat_ablation.log
+!code/sat_direct.log
