@@ -15,6 +15,8 @@ Every script exits with a non-zero status if a check fails.
 | `optimal_structure.py` | Orbit of the witness's violated set under O⁺(8,2) (240 sets), realisability of each by linear algebra, equality with the SAT list, an isomorphism with DW(5,2) found and checked for each of the 240 sets, and a check of the stored isomorphism `dw52_isomorphism.json` for the witness (`--find` recomputes it) | seconds |
 | `optimal_sets.json`, `dw52_isomorphism.json` | Outputs of the two scripts above | |
 | `drat/` | The DRAT check of the final unsatisfiable formula: `check.sh` and its output `check.log` (CaDiCaL proof, verified by drat-trim) | ~1 min |
+| `sat_ablation.sh`, `sat_ablation.log` | The encoding comparison of the paper: the four combinations of doily family (2520 or 40 320) and pair clauses, each with a 30-minute limit (`enumerate_optimal.py --family=all --no-pairs`, …) | up to 2 h |
+| `sat_direct.py`, `sat_direct.sh`, `sat_direct.log` | Baselines without the paper's mathematics: MaxSAT (RC2) and SAT with "at most 314 violated lines" (totalizer), each with a 30-minute limit | up to 1 h |
 | `general_bounds.py` | The table of the lower bounds ⌈L/5⌉ for all quadrics, N = 3..7, with direct counts for N ≤ 5 | < 1 s |
 | `quadratic/` | Exhaustive search over the 2^28 quadratic assignments: none violates fewer than 532 lines (`./run.sh`) | seconds |
 

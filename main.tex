@@ -4,6 +4,7 @@
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
+\usepackage{graphicx}
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage[hidelinks]{hyperref}
@@ -46,7 +47,8 @@ An explicit assignment attains $315$.
 Equality forces every doily to fail on exactly one ruling of one of its grids, and an exhaustive SAT enumeration under this constraint shows that there are exactly $240$ optimal sets of violated lines, forming a single orbit of $\GO^+(8,2)$, each isomorphic to $DW(5,2)$.
 The same argument gives $\dg\ge\lceil L/5\rceil$ for every hyperbolic and elliptic quadric with $L$ lines in $N\ge3$ qubits, which is tight for $N=3$.
 Physically, the result is a state-independent noncontextuality inequality on $1575$ correlators whose classical bound $945$ is exact, against the quantum value $1575$.
-The theorem for the real quadric is formalised and kernel-checked in Lean~4.
+The theorem for the real quadric is formalised and kernel-checked in Lean~4, and the enumeration is certified by a DRAT proof.
+For the formal-methods reader we give the encodings and all running times: the degree problem is MAX-XOR-SAT, and while direct MaxSAT and cardinality formulations do not finish within $30$ minutes, the local characterisation of the optimum reduces the complete enumeration to about $30$ seconds.
 \end{abstract}
 
 \section{Introduction}
@@ -86,11 +88,18 @@ The rounding $\lceil 10/4\rceil=3$ inside each doily is what makes the bound tig
 We formalised the theorem for the real quadric (the observables with an even number of $Y$ factors) in Lean~4 with Mathlib~\cite{Lean4,Mathlib}; the kernel checks every finite fact, and the statement depends only on the standard axioms (\cref{sec:lean}).
 All code and certificates are available at \repo.
 
+\paragraph{For the formal-methods reader.}
+Computing a contextuality degree is a MAX-XOR-SAT problem, here with $135$ variables and $1575$ parity constraints of length three, and this one had resisted the solver-based attacks of~\cite{Muller23,Muller24}.
+SAT solving has settled several open problems in combinatorics, often with the help of mathematical insight in the encoding~\cite{Heule16,Zulkoski15}.
+The present case is an extreme instance of that pattern: the mathematics settles the optimisation problem completely, and what remains for the solver, the classification of all optima, becomes easy only after the proof is turned into constraints.
+\Cref{sec:sat,sec:ablation} give the encoding and a comparison: direct MaxSAT and cardinality formulations do not finish within $30$ minutes, while local cardinality constraints over doilies, together with redundant clauses derived from \cref{prop:doily}, enumerate all optimal solutions in about $30$ seconds, with a DRAT certificate for completeness.
+\Cref{sec:lean} describes the Lean proof, in particular how $191$ kernel evaluations were restructured to fit in $2.2$\,GB of memory, and \cref{sec:costs} lists the running time of every computation.
+
 \paragraph{Outline.}
 \Cref{sec:prelim} sets up the geometry and the symmetries of the problem.
 \Cref{sec:doily} proves that every doily of a quadric has degree at least $3$.
 \Cref{sec:main} proves the main theorem, \cref{sec:optimal} studies the optimal assignments, and \cref{sec:general} extends the lower bound to all quadrics.
-\Cref{sec:physics} discusses the physical consequences, \cref{sec:lean} the formal proof, and \cref{sec:open} open problems.
+\Cref{sec:physics} discusses the physical consequences, \cref{sec:lean} the Lean proof, \cref{sec:computations} the encodings, certificates and running times, and \cref{sec:open} open problems.
 
 \section{Pauli observables, quadrics and the contextuality degree}\label{sec:prelim}
 
@@ -277,25 +286,18 @@ Each of them, as a point--line geometry, is isomorphic to the dual polar space $
 By \cref{lem:clifford} the same holds for every hyperbolic quadric of $W(7,2)$.
 \end{theorem}
 
-\begin{proof}[Method]
-\emph{Enumeration.}
-We encode an assignment by $135$ Boolean variables and introduce, for each line $C$, a variable for ``$C$ is violated'', defined by eight clauses expressing the XOR.
-We use the family $\mathcal F$ of $2520$ doilies of the \lean{} proof (\cref{sec:lean}), which covers every line exactly $24$ times, and require for each of its doilies that exactly three of its fifteen lines are violated, with a sequential-counter cardinality encoding.
-By \cref{prop:ruling} the models of this formula are exactly the optimal assignments.
-We add $37\,800$ binary clauses forbidding two intersecting lines of a common doily (among all $40\,320$) to be both violated; by \cref{prop:doily,prop:ruling} they hold in every optimal assignment, so they do not change the models, but they make the search much faster.
-We enumerate the distinct violated sets with the SAT solver CaDiCaL~\cite{CaDiCaL} through PySAT~\cite{PySAT}, adding after each one a clause that forbids it.
-The enumeration ends after $240$ sets, in under a minute, with an unsatisfiable formula of $413\,520$ clauses.
-We certified this unsatisfiability independently: CaDiCaL~3.0 produced a DRAT proof, and \texttt{drat-trim}~\cite{DRATtrim} verified it.
+\begin{proof}[Proof (computer-assisted)]
+\emph{Enumeration.} \Cref{sec:sat} gives a propositional formula whose models are exactly the optimal assignments (\cref{lem:encoding}). Enumerating its models with a SAT solver, each new violated set being excluded by a blocking clause, yields $240$ violated sets, after which the formula is unsatisfiable; that last unsatisfiability is certified by a DRAT proof checked by \texttt{drat-trim}.
 \emph{Gauge.}
 The assignments that violate no line are those $f$ with $f(u)+f(v)+f(u+v)=0$ on every line; the line--point incidence matrix has rank $127$ over $\F_2$, so they form a space of dimension $8$, namely the restrictions of the $256$ linear functionals, and each violated set comes from exactly $2^8$ assignments.
 \emph{Orbit.}
 The orthogonal group $\GO^+(8,2)$ of $Q_0$ is generated by the $120$ transvections $t_r$ with $Q_0(r)=1$ (reflections), each induced by a Clifford unitary~\cite{Taylor92}.
 By \cref{lem:clifford} each maps violated sets of optimal assignments to violated sets of optimal assignments.
-Starting from the violated set of our witness, the orbit under these generators has exactly $240$ elements, and it coincides with the enumerated list.
+Starting from the violated set of our witness, the orbit under these generators has exactly $240$ elements; linear algebra over $\F_2$ confirms that each of them is the violated set of some assignment, independently of the SAT solver, and the orbit coincides with the enumerated list.
 Since $|\GO^+(8,2)|=348\,364\,800$, the stabiliser of a violated set has order $1\,451\,520=|\Sp(6,2)|$, the order of the automorphism group of $DW(5,2)$.
 \emph{Isomorphism.}
 The dual polar space $DW(5,2)$ has as points the $135$ planes (maximal totally isotropic subspaces) of $W(5,2)$ and as lines its $315$ lines~\cite{DeBruyn06}.
-For each of the $240$ violated sets, a backtracking search finds a bijection from the planes of $W(5,2)$ to the points of $Q_0$ mapping the lines of $W(5,2)$ onto the violated lines, and we check it directly (this also follows from the orbit statement). The isomorphism for our witness is stored with the code.
+For each of the $240$ violated sets, a backtracking search finds a bijection from the planes of $W(5,2)$ to the points of $Q_0$ mapping the lines of $W(5,2)$ onto the violated lines, and we check it directly (this also follows from the orbit statement).
 \end{proof}
 
 \Cref{thm:dw} confirms the second half of the conjecture of~\cite{Muller24}: the unsatisfied configurations of the four-qubit hyperbolic quadric are \emph{always} isomorphic to $DW(5,2)$.
@@ -378,27 +380,161 @@ The heuristic upper bounds of~\cite{Muller24} for $W(7,2)$, $\Qm(7,2)$ and $\Qp(
 \Cref{thm:dw} adds that the failures form one rigid geometric object, a $DW(5,2)$, unique up to the symmetry of the quadric.
 This is the four-qubit analogue of the three-qubit picture of~\cite{Saniga24hex}, where the unsatisfied lines of $W(5,2)$ always form a classically embedded split Cayley hexagon.
 
-\section{Formal verification}\label{sec:lean}
+\section{Formal verification in Lean}\label{sec:lean}
 We formalised the theorem for $Q_0$ in Lean~4 (v4.35.0-rc2) with Mathlib~\cite{Lean4,Mathlib}.
 The final statement is
 \begin{center}
 \texttt{theorem degree\_eq\_315 : Contextuality.Pauli.degree 0 = 315}
 \end{center}
-where \texttt{degree w} is the least number of violated contexts of the quadric $Q_w$ over all assignments.
-\texttt{Basic.lean} defines points as numbers $v<256$, the symplectic form, the quadratic forms $Q_w$, the phase exponent $\varphi$, the contexts (computed inside Lean by filtering pairs of points), their signs from $\varphi$, violation and the degree.
-\texttt{PhaseMatrix.lean} proves that $\varphi$ is the exponent in the product of the actual $16\times16$ Pauli matrices over $\mathbb C$ (\texttt{pauliMat\_mul}), so that the sign of every context is the sign of the operator product (\texttt{context\_product}).
-\texttt{OddSets.lean} proves \cref{lem:odd}.
+where \texttt{degree w} is the infimum, over all maps $x:\mathbb N\to\mathbb Z/2$, of the number of violated contexts of the quadric $Q_w$.
+\texttt{\#print axioms degree\_eq\_315} reports only \texttt{propext}, \texttt{Classical.choice} and \texttt{Quot.sound}: the proof uses no \texttt{sorry}, no added axiom, and in particular no \texttt{native\_decide}, which would trust the compiler and its runtime.
 
-The lower bound uses a smaller family than all $40\,320$ doilies: the $2520$ doilies forming the union of the orbits of the qubit permutations $S_4$ on a selected set, which cover every line exactly $24$ times.
-For each of them the data lists the fifteen lines in the order of a fixed labelling of $GQ(2,2)$, with the ten grids at fixed positions.
-The kernel checks by \texttt{decide +kernel} that the keys of all these lines are a permutation of the $1575$ contexts, each repeated $24$ times, that each of the ten grids of each doily is an odd set (its six lines use every point an even number of times and their signs sum to $1$), and that each position lies in four grids.
-Then $24|\mathcal V|\ge3\cdot2520$ gives $|\mathcal V|\ge315$, and a kernel evaluation of the witness gives $315$.
-Nothing produced by the scripts that generate the data is trusted: the sorting of the $37\,800$ keys is checked through a permutation lemma, and every property of the data used in the proof is re-evaluated by the kernel.
-A single kernel evaluation of these checks needed about $10$\,GB of memory; splitting them into chunks combined by permutation lemmas reduced the build to under ten minutes and $3$\,GB on a laptop.
-\texttt{\#print axioms degree\_eq\_315} reports only \texttt{propext}, \texttt{Classical.choice} and \texttt{Quot.sound}.
+\paragraph{Definitions.}
+\texttt{Basic.lean} defines points as natural numbers $v<256$ with the encoding of \cref{sec:prelim} (bit $i$ is $x_i$, bit $i+4$ is $z_i$), the symplectic form, the quadratic forms $Q_w$, the phase exponent $\varphi$ as a sum of single-qubit exponents, the contexts as the pairs $(a,b)$ with $a<b<a\oplus b$ satisfying the definition (computed inside Lean by filtering all $256^2$ pairs, so that the list of contexts is not an input), their signs, violation, and the degree.
+\texttt{PhaseMatrix.lean} proves that $\varphi$ is the exponent in the product of the actual $16\times16$ Pauli matrices over $\mathbb C$ (\texttt{pauliMat\_mul}), so that the sign of every context is the sign of the operator product (\texttt{context\_product}); this ties the combinatorial definition to the physics.
+
+\paragraph{Proof.}
+\texttt{OddSets.lean} proves \cref{lem:odd} (\texttt{exists\_violated\_of\_odd}) for contexts given with point masks.
+The lower bound follows \cref{thm:main}, with a smaller family than all $40\,320$ doilies: the $2520$ doilies forming the union of the orbits of the qubit permutations $S_4$ on a selected set, which cover every line exactly $24$ times (found by integer programming over the orbits).
+For each doily the data lists its fifteen lines in the order of a fixed labelling of $GQ(2,2)$, so that the ten grids of \cref{lem:sylvester} sit at the same fifteen positions in every doily.
+The kernel then checks:
+(i) the keys of the $2520\cdot15=37\,800$ listed lines form a permutation of the $1575$ contexts, each repeated $24$ times (\texttt{keys\_perm});
+(ii) in every doily, each of the ten grids is an odd set: the exclusive-or of the point masks of its six lines is $0$ and their signs sum to $1$;
+(iii) each of the fifteen positions lies in four grids (\texttt{sum\_gridPos}).
+Together with \cref{lem:odd} this gives \texttt{three\_le\_doily} and $24|\mathcal V|\ge3\cdot2520$, hence \texttt{le\_numViolated}: $315\le|\mathcal V|$ for every assignment. A kernel evaluation of the witness (\texttt{witness\_check}) gives the upper bound.
+Nothing produced by the scripts that generate the data is trusted: every property of the data used in the proof is re-evaluated by the kernel, and the data's sortedness is never assumed.
+
+\paragraph{Making the kernel computation fit on a laptop.}
+All finite checks are discharged by \texttt{decide +kernel}, which evaluates a decidable proposition in the kernel.
+The kernel caches intermediate terms, so its memory grows with the number of reduction steps.
+Three naive checks did not fit: evaluating \texttt{contexts 0} (a filter over $256^2$ pairs) in one check exceeded a $4$\,GB limit, and a single sort-and-compare of all $37\,800$ keys was estimated, from the measured growth, at about $10$\,GB.
+We restructured the proof so that no check is large:
+\begin{itemize}[leftmargin=*]
+\item \texttt{Q8PlusContexts.lean} states the contexts as $64$ literal chunks and proves \texttt{contexts\_eq : contexts 0 = (List.range 64).flatMap cchunk} by $64$ separate kernel checks; every later check rewrites with it instead of recomputing the filter.
+\item The permutation check (i) is split twice: for each of $26$ chunks of $100$ doilies, a merge sort of its $1500$ keys equals a literal bucketed by \texttt{key/1024} (\texttt{sortOK}); for each of the $64$ buckets, the merged pieces from the $26$ chunks equal the corresponding chunk of contexts, each repeated $24$ times (\texttt{bucketOK}).
+The merge functions are proved to permute their input (\texttt{mergeTree\_perm}) and a lemma on exchanging two \texttt{flatMap}s up to permutation (\texttt{flatMap\_comm\_perm}) glues the chunks, so the correctness of the sorting is never assumed.
+\item Each Lean file imports only the Mathlib modules it needs: importing all of Mathlib alone costs about $4$\,GB of memory.
+\end{itemize}
+The development has $191$ \texttt{decide +kernel} checks. \Cref{tab:lean} lists its files.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+File & lines & build & content \\
+\midrule
+\texttt{Basic.lean} & 133 & 10\,s & definitions; \texttt{degree} \\
+\texttt{OddSets.lean} & 144 & 34\,s & \cref{lem:odd}; merge sort and its permutation lemmas \\
+\texttt{PhaseMatrix.lean} & 86 & 27\,s & phase rule for the Pauli matrices over $\mathbb C$ \\
+\texttt{Q8Plus.lean} & 240 & 16\,s & the proof of \texttt{degree\_eq\_315} \\
+\texttt{Q8PlusData.lean} (generated) & 6\,266 & 55\,s & $2520$ doilies, grid positions, witness \\
+\texttt{Q8PlusContexts.lean} (generated) & 580 & 71\,s & contexts in $64$ chunks; $67$ kernel checks \\
+\texttt{Q8PlusChecks.lean} (generated) & 226 & 276\,s & $120$ kernel checks: cover, sorting, grids \\
+\bottomrule
+\end{tabular}
+\caption{The Lean development. Build times with one thread on the machine of \cref{sec:costs}, Mathlib precompiled; the whole build takes under ten minutes, and the peak memory, reached on \texttt{Q8PlusChecks.lean}, is 2.2\,GB.}
+\label{tab:lean}
+\end{table}
 
 The formalisation covers the real quadric $Q_0$. The other $135$ hyperbolic quadrics follow from \cref{cor:allquadrics}, which we checked by computer but did not formalise.
-\Cref{thm:dw} is not formalised.
+\Cref{thm:dw} is not formalised; its certificate is the DRAT proof of \cref{sec:sat}.
+
+\section{Computations: encodings, certificates and costs}\label{sec:computations}
+This section is written for readers who want to check or reuse the computations. All of them are in the repository; \cref{tab:costs} lists their running times.
+
+\subsection{What is computed, and who checks it}
+\begin{itemize}[leftmargin=*]
+\item \emph{Finite facts used in the proofs} (numbers of quadrics, points, lines and signs; the doilies, their grids and multiplicities; the witness): computed by one Python program, recomputed by a second one written separately, and, for $Q_0$, re-evaluated by the Lean kernel. The signs are computed both from the phase rule and from $16\times16$ matrix products.
+\item \emph{\Cref{thm:main}}: the lower bound is a proof by hand (\cref{sec:doily,sec:main}); the upper bound is the evaluation of the witness on $1575$ lines. Both are kernel-checked in Lean for $Q_0$.
+\item \emph{\Cref{thm:dw}}: the completeness of the list of $240$ violated sets rests on the SAT encoding of \cref{sec:sat} and on a DRAT proof checked by \texttt{drat-trim}. The orbit, the realisability of each set and the isomorphisms with $DW(5,2)$ are checked by separate code that does not use the SAT solver.
+\item \emph{Remark on quadratic assignments}: an exhaustive search in C.
+\end{itemize}
+
+\subsection{The SAT encoding of the optimal assignments}\label{sec:sat}
+The degree problem is an instance of MAX-XOR-SAT: $135$ Boolean variables and $1575$ parity constraints of length three, one per line, and the task is to satisfy as many as possible.
+Rather than optimise, we use \cref{prop:ruling} to characterise the optimum by local constraints.
+\begin{itemize}[leftmargin=*]
+\item \emph{Variables.} $x_p$ for the $135$ points and $v_C$ for the $1575$ lines.
+\item \emph{Parity.} For each line $C=\{a,b,c\}$, the eight clauses that forbid the assignments of $(v_C,x_a,x_b,x_c)$ with $v_C+x_a+x_b+x_c\neq s(C)$, so that $v_C$ holds iff $x$ violates $C$ ($12\,600$ clauses).
+\item \emph{Local cardinality.} For each doily $D$ of a family $\mathcal F$ covering every line equally often, ``exactly three of the fifteen $v_C$, $C\in D$, are true'', with Sinz's sequential counter~\cite{Sinz05} for ``at most $3$'' on the $v_C$ and ``at most $12$'' on their negations ($144$ clauses and $72$ auxiliary variables per doily). We use either the $2520$ doilies of the Lean proof or all $40\,320$.
+\item \emph{Pair clauses} (redundant). For any two intersecting lines $C,C'$ of a common doily, the clause $\neg v_C\vee\neg v_{C'}$. There are $37\,800$ such pairs: through each point, two of its $35$ lines lie in a common doily iff they are not coplanar on the quadric.
+\item \emph{Blocking clauses.} After a model with violated set $\mathcal V$, the clause $\bigvee_{C\in\mathcal V}\neg v_C$. Since every model has $|\mathcal V|=315$, it excludes exactly the models with violated set $\mathcal V$.
+\end{itemize}
+
+\begin{lemma}\label{lem:encoding}
+With either family, with or without the pair clauses, the projections of the models onto the $x$-variables are exactly the optimal assignments of $Q_0$.
+\end{lemma}
+\begin{proof}
+By \cref{prop:ruling} (converse), every model is optimal. Conversely, an optimal assignment has exactly three violated lines in every doily, which are pairwise disjoint by \cref{prop:doily}, so it satisfies all cardinality and pair clauses with the auxiliary variables of the sequential counters set accordingly.
+\end{proof}
+
+No symmetry breaking is used: the gauge freedom of \cref{sec:optimal} leaves $256$ models per violated set, and the blocking clauses act on the $v$-variables only.
+The final formula, the base formula plus the $240$ blocking clauses, has $183\,150$ variables and $413\,520$ clauses in the default configuration.
+CaDiCaL~3.0.1~\cite{CaDiCaL} refutes it and writes a DRAT proof of $39$\,MB; \texttt{drat-trim}~\cite{DRATtrim} verifies it, using $120\,460$ of the $560\,025$ lemmas.
+What is not formally verified is the encoder itself, a short Python program, and \cref{lem:encoding}.
+
+\subsection{What made the enumeration easy}\label{sec:ablation}
+Muller \emph{et al.}~\cite{Muller23,Muller24} attacked the degree with SAT solvers and with heuristics directly, and the direct formulations remain hard.
+\Cref{tab:ablation} compares, with the same solver and a time limit of $30$ minutes, two direct formulations with the four variants of our encoding.
+The direct formulations are a MaxSAT instance (the parity clauses as hard clauses, $\neg v_C$ as $1575$ soft clauses, solved by RC2~\cite{RC2}) and the decision problem ``at most $314$ violated lines'' with a totalizer encoding~\cite{Totalizer}, whose unsatisfiability is the lower bound of \cref{thm:main}.
+
+\begin{table}[ht]
+\centering\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}llrrl@{}}
+\toprule
+Formulation & & variables & clauses & result within 30 min \\
+\midrule
+MaxSAT (RC2) & & 1\,710 & 12\,600 + 1\,575 soft & not solved \\
+SAT, at most $314$ violated (totalizer) & & 18\,562 & 1\,268\,978 & not solved \\
+\midrule
+local cardinality, $2520$ doilies & & 183\,150 & 375\,480 & all 240 by 44\,s; not refuted \\
+local cardinality, $40\,320$ doilies & & 2\,904\,750 & 5\,818\,680 & all 240 by 1363\,s; refuted at 1447\,s \\
+local cardinality, $2520$ doilies + pairs & & 183\,150 & 413\,280 & all 240 by 29\,s; refuted at 31\,s \\
+local cardinality, $40\,320$ doilies + pairs & & 2\,904\,750 & 5\,856\,480 & all 240 by 403\,s; refuted at 407\,s \\
+\bottomrule
+\end{tabular}}
+\caption{Formulations of the degree problem for $Q_0$, solved by CaDiCaL~1.5.3 through PySAT (RC2 with its default Glucose~3 oracle) on the machine of \cref{sec:costs}, one thread, $30$-minute limit. For the enumerations, the times are until the last of the $240$ violated sets is found and until the final formula is refuted.}
+\label{tab:ablation}
+\end{table}
+
+Three observations stand out.
+First, neither direct formulation finishes: RC2 does not reach the optimum and the solver does not refute ``at most $314$'' within $30$ minutes, although \cref{thm:main} shows that the answer is $315$.
+The lower bound is therefore not merely faster to prove by hand; for these generic encodings it is out of reach of the solver in this time.
+Second, the local cardinality constraints make the \emph{search} easy: every variant finds all $240$ optimal violated sets.
+Third, \emph{completeness}, the refutation after the last blocking clause, depends on the redundant pair clauses: without them the small family is not refuted within $30$ minutes and the large one needs $84$\,s for the last call alone; with them the final call takes $2$\,s and $4$\,s.
+The pair clauses encode the second half of \cref{prop:doily}, that the violated lines of a doily are pairwise disjoint, so they are a lemma of the proof handed to the solver.
+The smaller family is also better: the $2520$ doilies of the Lean proof give a formula $14$ times smaller than all $40\,320$, and the full enumeration takes $31$\,s instead of $407$\,s.
+
+\subsection{Running times}\label{sec:costs}
+All times in \cref{tab:costs} are wall-clock times on a laptop (Apple M3, $8$ cores, $16$\,GB, macOS~14.5), with one thread and at low priority while other programs were running, so they are upper bounds on what a dedicated machine needs.
+Software: Python~3.12.12 with NumPy~2.5.4 and PySAT~1.9 (which bundles CaDiCaL~1.5.3); the standalone CaDiCaL~3.0.1; \texttt{drat-trim} at commit \texttt{2e3b2dc}; Lean~4 v4.35.0-rc2 with Mathlib at commit \texttt{045acef0}.
+
+\begin{table}[ht]
+\centering\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lll@{}}
+\toprule
+Computation & tool & time \\
+\midrule
+all finite facts of the paper (\texttt{verify\_facts.py}) & Python & 47\,s \\
+\quad with the degree $3$ of all $40\,320$ doilies by brute force over $2^{15}$ assignments & Python, NumPy & 55\,s \\
+separately written re-check of the bound and the witness (\texttt{independent\_check.py}) & Python, NumPy & 72\,s \\
+search for a witness (\texttt{find\_witness.py}) & Python & under 1\,s \\
+enumeration of the $240$ optimal violated sets (\texttt{enumerate\_optimal.py}) & CaDiCaL~1.5.3 & 30\,s \\
+\quad of which the final refutation & & 2\,s \\
+DRAT proof of the final refutation ($39$\,MB) & CaDiCaL~3.0.1 & 25\,s \\
+DRAT check & \texttt{drat-trim} & 11--14\,s \\
+orbit, realisability, $240$ isomorphisms with $DW(5,2)$ (\texttt{optimal\_structure.py}) & Python & 4\,s \\
+table of lower bounds for all quadrics (\texttt{general\_bounds.py}) & Python & 0.1\,s \\
+all $2^{28}$ quadratic assignments & C & 2.4\,s \\
+Lean build of \texttt{degree\_eq\_315} (Mathlib precompiled) & Lean~4 & under 10\,min \\
+axiom report & Lean~4 & 15\,s \\
+\bottomrule
+\end{tabular}}
+\caption{Running times of all computations (wall clock, one thread).}
+\label{tab:costs}
+\end{table}
 
 \section{Open problems}\label{sec:open}
 \begin{enumerate}[leftmargin=*]
@@ -432,16 +568,27 @@ An example of a doily of $Q_0$: the singular points of the subspace spanned by \
 \obs{XIII}, \obs{IXII}, \obs{XXII}, \obs{ZIII}, \obs{ZXII}, \obs{IZIX}, \obs{XZIX}, \obs{ZZIX}, \obs{YYIX}, \obs{YIYI}, \obs{YXYI}, \obs{IYYX}, \obs{XYYX}, \obs{YZYX}, \obs{ZYYX},
 and three of its fifteen lines are negative: $\{\obs{XXII},\obs{ZZIX},\obs{YYIX}\}$, $\{\obs{ZXII},\obs{XYYX},\obs{YZYX}\}$ and $\{\obs{XZIX},\obs{YXYI},\obs{ZYYX}\}$.
 
-\section{Computations}\label{app:computations}
-All computations run on a laptop. The scripts are in the repository.
-\begin{itemize}[leftmargin=*]
-\item \texttt{code/verify\_facts.py} (under a minute) recomputes every finite fact used above: the numbers of quadrics, points, lines and negative lines; the signs from the phase rule and from $16\times16$ matrix products; the $40\,320$ doilies of $Q_0$ and their $384$-fold cover of the lines; the ten grids of each doily, the four grids through each line and the two common grids of two intersecting lines; the oddness of all $67\,200$ grids and the anticommutation of their non-collinear points; the witness and its structure (seven violated lines through each point; in each doily, three violated lines forming a grid ruling); and the transport of the witness to all $136$ hyperbolic quadrics. With \texttt{-{}-brute} it also computes the degree $3$ of every doily over its $2^{15}$ assignments.
-\item \texttt{code/independent\_check.py} is a second implementation, written separately, of the counts, the doily bound and the witness, with signs from the Pauli multiplication table.
-\item \texttt{code/enumerate\_optimal.py} (under a minute) performs the SAT enumeration of \cref{thm:dw} and writes the final formula; \texttt{code/drat/} records its DRAT check. \texttt{code/optimal\_structure.py} computes the orbit of the witness's violated set, checks by linear algebra over $\F_2$ that every set in the orbit is the violated set of an assignment, compares the orbit with the SAT list, and checks the stored isomorphism with $DW(5,2)$.
-\item \texttt{code/general\_bounds.py} computes \cref{tab:general}, counting points and lines directly for $N\le5$.
-\item \texttt{code/quadratic/} contains the exhaustive search over quadratic assignments.
-\item \texttt{lean/} contains the Lean development and the scripts that generate its data files.
-\end{itemize}
+\section{Reproducing the computations}\label{app:computations}
+From the folder \texttt{code} of the repository, with Python and the packages \texttt{numpy} and \texttt{python-sat}:
+\begin{center}\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}ll@{}}
+\toprule
+command & reproduces \\
+\midrule
+\texttt{python verify\_facts.py -{}-brute} & every finite fact of \cref{sec:prelim,sec:doily,sec:main}; the witness \\
+\texttt{python independent\_check.py} & the same, separately written \\
+\texttt{python enumerate\_optimal.py -{}-cnf} & \cref{thm:dw}: the $240$ sets and the final formula \\
+\texttt{sh drat/check.sh} & the DRAT proof and its check (needs CaDiCaL and \texttt{drat-trim}) \\
+\texttt{python optimal\_structure.py} & \cref{thm:dw}: orbit, realisability, isomorphisms with $DW(5,2)$ \\
+\texttt{sh sat\_ablation.sh}, \texttt{sh sat\_direct.sh} & \cref{tab:ablation} \\
+\texttt{python general\_bounds.py} & \cref{tab:general} \\
+\texttt{sh quadratic/run.sh} & the remark on quadratic assignments \\
+\bottomrule
+\end{tabular}}
+\end{center}
+In the folder \texttt{lean}, run \texttt{lake exe cache get} to download the compiled Mathlib, then \texttt{lake build}, and finally \texttt{lake env lean scripts/AxiomReport.lean} for the axiom report.
+Every script exits with a non-zero status if a check fails.
 
 \bibliographystyle{plain}
 \bibliography{refs}

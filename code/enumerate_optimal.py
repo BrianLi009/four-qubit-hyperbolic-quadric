@@ -9,6 +9,9 @@ sequential-counter encoding of "exactly 3 of the 15 v_C" for each doily of the f
 "not both" for any two intersecting lines of a common doily (implied for optimal assignments; --no-pairs omits them). The distinct violated sets are enumerated
 with CaDiCaL (PySAT), blocking each one by the clause "not all of its lines are violated" (all sets have 315 lines).
 
+Options (for the encoding comparison in the paper, see sat_ablation.sh): --family=all uses all 40320 doilies
+instead of the 2520 of the Lean proof; --no-pairs omits the pair clauses. Only the default configuration writes files.
+
 Outputs: optimal_sets.json (each set as the sorted indices of its lines in the list `lines` stored with it) and,
 with --cnf, the final formula (base + blocking clauses) in DIMACS for an independent DRAT check:
     cadical final.cnf final.drat ; drat-trim final.cnf final.drat
@@ -29,15 +32,33 @@ from verify_facts import Q, quadric_lines, quadric_points, sign_bit, span, subsp
 
 
 def main():
+    family = "all" if "--family=all" in sys.argv else "lean"
+    use_pairs = "--no-pairs" not in sys.argv
     P0 = quadric_points(0)
     L0 = sorted(tuple(sorted(k)) for k in quadric_lines(0))
     pid = {p: i + 1 for i, p in enumerate(P0)}
     lid = {k: 136 + j for j, k in enumerate(L0)}
-    fam = json.load(open(HERE.parent / "lean" / "gen" / "order_perm.json"))["doilies"]
-    doilies = [[tuple(sorted((key // 256, key % 256, (key // 256) ^ (key % 256)))) for key in d] for d in fam]
+    t_build = time.time()
+    all_doilies = None
+    if use_pairs or family == "all":
+        Lset = {frozenset(k) for k in L0}
+        all_doilies = []
+        for rows in subspaces(8, 5):
+            S = [v for v in span(rows) if v and Q(0, v) == 0]
+            if len(S) != 15:
+                continue
+            ls = [tuple(sorted(t)) for t in itertools.combinations(S, 3) if frozenset(t) in Lset]
+            if len(ls) == 15:
+                all_doilies.append(sorted(ls))
+        assert len(all_doilies) == 40320
+    if family == "lean":
+        fam = json.load(open(HERE.parent / "lean" / "gen" / "order_perm.json"))["doilies"]
+        doilies = [[tuple(sorted((key // 256, key % 256, (key // 256) ^ (key % 256)))) for key in d] for d in fam]
+    else:
+        doilies = all_doilies
     cover = collections.Counter(k for d in doilies for k in d)
-    assert len(doilies) == 2520 and set(cover) == set(L0) and set(cover.values()) == {24}, "family is not a 24-fold cover"
-    print("family: 2520 doilies covering each of the 1575 lines 24 times", flush=True)
+    assert set(cover) == set(L0) and len(set(cover.values())) == 1, "family does not cover the lines equally often"
+    print(f"family: {len(doilies)} doilies covering each of the 1575 lines {cover[L0[0]]} times", flush=True)
 
     clauses = []
     for k in L0:
@@ -47,47 +68,48 @@ def main():
             bits = [(m >> i) & 1 for i in range(4)]
             if sum(bits) % 2 != s:            # forbid v + x_a + x_b + x_c != s
                 clauses.append([-x if b else x for x, b in zip(vs, bits)])
-    # Redundant clauses (Proposition on doilies): in an optimal assignment the three violated lines of every doily
+    n_xor = len(clauses)
+    # Redundant clauses (proposition on doilies): in an optimal assignment the three violated lines of every doily
     # are pairwise disjoint, so two intersecting lines of a common doily are never both violated.
     pairs = set()
-    if "--no-pairs" not in sys.argv:
-        Lset = {frozenset(k) for k in L0}
-        for rows in subspaces(8, 5):
-            S = [v for v in span(rows) if v and Q(0, v) == 0]
-            if len(S) != 15:
-                continue
-            ls = [tuple(sorted(t)) for t in itertools.combinations(S, 3) if frozenset(t) in Lset]
-            if len(ls) == 15:
-                pairs.update((k1, k2) for k1, k2 in itertools.combinations(sorted(ls), 2) if set(k1) & set(k2))
+    if use_pairs:
+        for ls in all_doilies:
+            pairs.update((k1, k2) for k1, k2 in itertools.combinations(ls, 2) if set(k1) & set(k2))
         clauses.extend([-lid[k1], -lid[k2]] for k1, k2 in sorted(pairs))
-        print(f"{len(pairs)} pairs of intersecting lines sharing a doily", flush=True)
+    n_pairs = len(pairs)
     top = 135 + 1575
     for d in doilies:
         enc = CardEnc.equals(lits=[lid[k] for k in d], bound=3, top_id=top, encoding=EncType.seqcounter)
         top = max(top, enc.nv)
         clauses.extend(enc.clauses)
-    print(f"{len(clauses)} clauses, {top} variables", flush=True)
+    n_card = len(clauses) - n_xor - n_pairs
+    print(f"formula: {top} variables ({135} points, {1575} lines, {top - 1710} auxiliary); {len(clauses)} clauses "
+          f"({n_xor} XOR, {n_card} cardinality, {n_pairs} pair); built in {time.time() - t_build:.0f} s", flush=True)
 
-    sets, t0 = [], time.time()
+    sets, t0, t_last = [], time.time(), None
     with Solver(name="cadical153", bootstrap_with=clauses) as solver:
         while solver.solve():
             model = solver.get_model()
             V = [j for j in range(1575) if model[135 + j] > 0]
             assert len(V) == 315
             sets.append(V)
+            t_last = time.time() - t0
             block = [-(136 + j) for j in V]
             clauses.append(block)
             solver.add_clause(block)
             if len(sets) % 20 == 0:
-                print(f"  {len(sets)} sets, {time.time() - t0:.0f} s", flush=True)
-    print(f"exactly {len(sets)} optimal violated sets ({time.time() - t0:.0f} s); the final formula is unsatisfiable")
-    json.dump({"lines": L0, "sets": sets}, open(HERE / "optimal_sets.json", "w"))
-    if "--cnf" in sys.argv:
-        with open(HERE / "final.cnf", "w") as f:
-            f.write(f"p cnf {top} {len(clauses)}\n")
-            for c in clauses:
-                f.write(" ".join(map(str, c)) + " 0\n")
-        print("wrote final.cnf")
+                print(f"  {len(sets)} sets, {t_last:.0f} s", flush=True)
+    t_total = time.time() - t0
+    print(f"exactly {len(sets)} optimal violated sets; last set found at {t_last:.1f} s, "
+          f"final unsatisfiability proved at {t_total:.1f} s (final call {t_total - t_last:.1f} s)")
+    if family == "lean" and use_pairs:
+        json.dump({"lines": L0, "sets": sets}, open(HERE / "optimal_sets.json", "w"))
+        if "--cnf" in sys.argv:
+            with open(HERE / "final.cnf", "w") as f:
+                f.write(f"p cnf {top} {len(clauses)}\n")
+                for c in clauses:
+                    f.write(" ".join(map(str, c)) + " 0\n")
+            print("wrote final.cnf")
 
 
 if __name__ == "__main__":

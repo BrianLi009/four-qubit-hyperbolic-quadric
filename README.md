@@ -38,6 +38,8 @@ LEAN_NUM_THREADS=1 lake build
 lake env lean scripts/AxiomReport.lean       # only propext, Classical.choice, Quot.sound
 ```
 
+Running times of every computation, the SAT encodings and a comparison of encodings are in Section 9 of the paper. Everything except the Lean build reruns in a few minutes on a laptop.
+
 ## Conventions
 
 A Pauli observable on four qubits is encoded as an integer `v < 256`. Bit `i` is `x_i` and bit `i+4` is `z_i`; qubit `i` carries I, X, Z, Y for `(x_i, z_i) = (0,0), (1,0), (0,1), (1,1)`. The real quadric is `Q_0(v) = number of Y's mod 2`. An assignment gives each observable a bit, and bit 1 means outcome −1. The same conventions are used in the paper, the Python code and Lean.
