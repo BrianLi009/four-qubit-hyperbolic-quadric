@@ -96,10 +96,41 @@ The present case is an extreme instance of that pattern: the mathematics settles
 \Cref{sec:lean} describes the Lean proof, in particular how $191$ kernel evaluations were restructured to fit in $2.2$\,GB of memory, and \cref{sec:costs} lists the running time of every computation.
 
 \paragraph{Outline.}
-\Cref{sec:prelim} sets up the geometry and the symmetries of the problem.
+\Cref{sec:related} reviews related work and \cref{sec:prelim} sets up the geometry and the symmetries of the problem.
 \Cref{sec:doily} proves that every doily of a quadric has degree at least $3$.
 \Cref{sec:main} proves the main theorem, \cref{sec:optimal} studies the optimal assignments, and \cref{sec:general} extends the lower bound to all quadrics.
 \Cref{sec:physics} discusses the physical consequences, \cref{sec:lean} the Lean proof, \cref{sec:computations} the encodings, certificates and running times, and \cref{sec:open} open problems.
+
+\section{Related work}\label{sec:related}
+
+\paragraph{Contextuality.}
+The Kochen--Specker theorem~\cite{KS67,Bell66} and its many proofs are surveyed by Budroni, Cabello, G\"uhne, Kleinmann and Larsson~\cite{Budroni22}.
+Proofs with Pauli observables began with the Peres--Mermin square and Mermin's pentagram~\cite{Peres90,Mermin90,Mermin93}; Waegell and Aravind constructed families of observable-based proofs in the $N$-qubit Pauli group~\cite{Waegell13}, and Trandafir, Lison\v{e}k and Cabello characterised the irreducible magic sets of $n$ qubits~\cite{Trandafir22}.
+State-independent contextuality was turned into experimentally testable inequalities by Cabello~\cite{Cabello08,Cabello10} and tested with trapped ions and photons~\cite{Kirchmair09,Amselem09}; tests of whole symplectic polar spaces on noisy quantum computers were reported by Holweck~\cite{Holweck21}.
+Quantitative measures of contextuality include the contextual fraction of Abramsky, Barbosa and Mansfield~\cite{Abramsky17}, in the sheaf-theoretic framework of~\cite{Abramsky11}; the contextuality degree studied here is a combinatorial measure for observable-based proofs, closely tied to the classical value of Mermin-type games~\cite{Arkhipov12,Kelleher24}.
+Contextuality is a resource for quantum computation: for magic-state injection~\cite{Howard14}, for measurement-based computation~\cite{Raussendorf13}, and for qubit computation models~\cite{BermejoVega17}.
+
+\paragraph{The finite geometry of Pauli observables.}
+The identification of the $N$-qubit Pauli group modulo phases with the symplectic polar space $W(2N-1,2)$ is due to Saniga and Planat~\cite{SanigaPlanat07}, with general qudit versions by Havlicek, Odehnal and Saniga~\cite{Havlicek09} and Thas~\cite{Thas09}.
+This dictionary has been used to classify contextual configurations: Mermin pentagrams as ovoids and their three-qubit taxonomy~\cite{SanigaLevay12,LevaySzabo17}, the Veldkamp spaces of multiple qubits~\cite{VranaLevay10}, the split Cayley hexagon of order two and its role for three qubits~\cite{LevaySanigaVrana08,Planat13,Holweck22hex}, the polar subspaces of small rank~\cite{Saniga21}, and the real four-qubit Pauli group as a hyperbolic quadric of $PG(7,2)$ with its ovoids~\cite{SanigaLevayPracna12}.
+The Lagrangian Grassmannian $LGr(N,2N)$ relates $N$-qubit and $2^{N-1}$-qubit Pauli groups~\cite{Holweck14,Levay13}; for $N=3$ it maps the $135$ planes of $W(5,2)$ to the points of the four-qubit hyperbolic quadric, which is how $DW(5,2)$ appears in our problem.
+For the geometry itself we rely on~\cite{PayneThas09,HirschfeldThas16,Taylor92,DeBruyn06}.
+
+\paragraph{The contextuality degree.}
+De Boutray, Holweck, Giorgetti, Masson and Saniga~\cite{deBoutray22} introduced the degree and computed it for the quadrics of three qubits ($21$ and $9$).
+Muller \emph{et al.}\ enumerated the multi-qubit doilies and showed that every doily has degree $3$~\cite{Muller22doilies}; they then computed degrees of many configurations with SAT solvers and sparse linear algebra, found that the whole three-qubit space $W(5,2)$ has degree $63$, and gave upper bounds for four and five qubits~\cite{Muller23}.
+A heuristic search then gave the upper bounds of \cref{tab:general} for four to seven qubits, together with the conjectures that we prove~\cite{Muller24}.
+Saniga \emph{et al.}\ explained the value $63$ by averaging over doilies and showed that the unsatisfied configurations of $W(5,2)$ are classically embedded split Cayley hexagons~\cite{Saniga24hex,Holweck22hex}; Muller and Giorgetti identified an abstract structure that determines the degree of observable-based proofs~\cite{MullerGiorgetti24}, and Muller's thesis collects the algorithmic side~\cite{MullerThesis}.
+Our lower bound uses the same averaging principle as~\cite{Saniga24hex,Muller24}; what is new is that, applied to the doilies of a quadric, it is tight, and that its equality case characterises the optimal assignments.
+
+\paragraph{SAT solving and formal proof in mathematics.}
+SAT solvers have settled several long-open combinatorial problems, among them the Boolean Pythagorean triples problem~\cite{Heule16}, Schur number five~\cite{Heule18} and the last open dimension of Keller's conjecture~\cite{Brakensiek20}.
+Combining SAT solvers with computer algebra (SAT+CAS) was proposed in MathCheck~\cite{Zulkoski15}.
+For Kochen--Specker sets in three dimensions, the minimum size was bounded from below by exhaustive search~\cite{Uijlen16}, then by SAT modulo symmetries with co-certificate learning~\cite{Kirchweger23} and by SAT+CAS with certified proofs~\cite{LiBrightGanesh24}.
+Unsatisfiability results are made checkable by clausal proofs: DRAT proofs checked by \texttt{drat-trim}~\cite{DRATtrim}, and verified checkers such as \texttt{cake\_lpr}~\cite{cakeLPR}.
+Parity constraints such as ours are handled natively by solvers with Gaussian elimination~\cite{Soos09}; MaxSAT solvers such as RC2~\cite{RC2} address the optimisation version directly.
+Large finite computations have been formally verified before in proof assistants, notably in the proofs of the four colour theorem in Coq~\cite{Gonthier08} and of the Kepler conjecture in HOL Light and Isabelle~\cite{Hales17}.
+Our use of SAT differs from these in that the solver is not used to establish the main theorem: the degree is proved by hand and kernel-checked in Lean~\cite{Lean4,Mathlib}, and the solver is used only for the classification of the optima, where the encoding is made tractable by lemmas from the proof (\cref{sec:ablation}).
 
 \section{Pauli observables, quadrics and the contextuality degree}\label{sec:prelim}
 
@@ -335,7 +366,7 @@ $N$ & configuration & points & lines $L$ & $\lceil L/5\rceil$ & known value or u
 \midrule
 3 & $\Qp(5,2)$ & 35 & 105 & 21 & $=21$~\cite{deBoutray22} \\
 3 & $\Qm(5,2)$ & 27 & 45 & 9 & $=9$~\cite{deBoutray22} \\
-3 & $W(5,2)$ & 63 & 315 & 63 & $=63$~\cite{Saniga24hex} \\
+3 & $W(5,2)$ & 63 & 315 & 63 & $=63$~\cite{Muller23,Saniga24hex} \\
 4 & $\Qp(7,2)$ & 135 & 1\,575 & 315 & $=315$ (\cref{thm:main}) \\
 4 & $\Qm(7,2)$ & 119 & 1\,071 & 215 & $\le315$~\cite{Muller24} \\
 4 & $W(7,2)$ & 255 & 5\,355 & 1\,071 & $\le1\,575$~\cite{Muller24} \\
