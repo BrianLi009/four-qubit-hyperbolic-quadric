@@ -17,6 +17,15 @@ The lower bound has a short proof with no computation: Peres–Mermin parity, Sy
 | `code/` | Python checks of every finite fact in the paper, the witness, and the SAT enumeration of the optimal assignments (see `code/README.md`) |
 | `lean/` | The Lean 4 proof of `degree 0 = 315` and the scripts that generate its data files (see `lean/README.md`) |
 
+## Building the paper (Overleaf or locally)
+
+The paper is the single LaTeX root `main.tex`, with its bibliography `refs.bib`, both at the top level. No other `.tex`, `.cls` or `.sty` files are in the repository, so Overleaf detects the main document automatically.
+
+- **Overleaf:** New Project → Import from GitHub → this repository. Use the default compiler, pdfLaTeX. The `code/` and `lean/` folders come along as ordinary files and do not affect the build.
+- **Locally:** `latexmk -pdf main.tex` (pdfLaTeX + BibTeX), or `tectonic -X compile main.tex`.
+
+Packages used: amsmath, amssymb, amsthm, booktabs, graphicx, enumitem, xcolor, hyperref, cleveref and geometry, all standard in TeX Live.
+
 ## Quick start
 
 ```shell
