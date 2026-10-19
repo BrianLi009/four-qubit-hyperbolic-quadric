@@ -5,6 +5,7 @@
 \usepackage{amsmath,amssymb,amsthm}
 \usepackage{booktabs}
 \usepackage{graphicx}
+\usepackage{tikz}
 \usepackage{enumitem}
 \usepackage{xcolor}
 \usepackage[hidelinks]{hyperref}
@@ -31,24 +32,33 @@
 \newcommand{\repo}{\url{https://github.com/BrianLi009/four-qubit-hyperbolic-quadric}}
 
 \title{The four-qubit hyperbolic quadric has contextuality degree 315}
-\author{[Author names and affiliations]}
+\author{
+  Zhengyu Li\\
+  Georgia Institute of Technology\\
+  \texttt{brian.li@gatech.edu}
+  \and
+  Amandeep Gupta\\
+  Georgia Institute of Technology\\
+  \texttt{alnu46@gatech.edu}
+  \and
+  Vijay Ganesh\\
+  Georgia Institute of Technology\\
+  \texttt{vganesh45@gatech.edu}
+}
 \date{}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-The contextuality degree of a configuration of Pauli observables is the least number of its contexts that any noncontextual assignment of $\pm1$ values must violate.
-The $135$ real four-qubit Pauli observables, with their $1575$ triples of pairwise commuting observables whose product is $\pm I$ as contexts, form the hyperbolic quadric $\Qp(7,2)$ of the symplectic polar space $W(7,2)$.
-From heuristic searches, Muller, Saniga, Giorgetti, Holweck and Kelleher conjectured that its contextuality degree is $315$, and that the unsatisfied contexts of every optimal assignment form a copy of the dual polar space $DW(5,2)$; Saniga \emph{et al.}\ described settling the degree as a computationally challenging task.
+The contextuality degree of a set of Pauli contexts is the least number of contexts that every noncontextual $\pm1$ assignment violates.
+For the four-qubit hyperbolic quadric $\Qp(7,2)$, whose $135$ points are the real four-qubit Pauli observables and whose $1575$ lines are the contexts, Muller \emph{et al.}\ conjectured from heuristic searches that the degree is $315$ and that the violated contexts of every optimal assignment form a dual polar space $DW(5,2)$.
 We prove both conjectures.
-The lower bound has a short proof: every doily of the quadric, a generalised quadrangle $GQ(2,2)$, contains ten Peres--Mermin grids, each line lying in four of them, so every assignment violates at least three of its fifteen lines; since the orthogonal group permutes the doilies and acts transitively on the lines, every assignment violates at least a fifth of all $1575$ lines.
-An explicit assignment attains $315$.
-Equality forces every doily to fail on exactly one ruling of one of its grids, and an exhaustive SAT enumeration under this constraint shows that there are exactly $240$ optimal sets of violated lines, forming a single orbit of $\GO^+(8,2)$, each isomorphic to $DW(5,2)$.
-The same argument gives $\dg\ge\lceil L/5\rceil$ for every hyperbolic and elliptic quadric with $L$ lines in $N\ge3$ qubits, which is tight for $N=3$.
-Physically, the result is a state-independent noncontextuality inequality on $1575$ correlators whose classical bound $945$ is exact, against the quantum value $1575$.
-The theorem for the real quadric is formalised and kernel-checked in Lean~4, and the enumeration is certified by a DRAT proof.
-For the formal-methods reader we give the encodings and all running times: the degree problem is MAX-XOR-SAT, and while direct MaxSAT and cardinality formulations do not finish within $30$ minutes, the local characterisation of the optimum reduces the complete enumeration to about $30$ seconds.
+The lower bound has a short proof by hand: every doily ($GQ(2,2)$) of the quadric contains ten Peres--Mermin grids covering each of its lines four times, so every assignment violates at least three of its fifteen lines, and averaging over the doilies gives $1575/5=315$.
+The equality case is local: an assignment is optimal exactly when it violates one ruling of one grid in every doily.
+Using this as a SAT encoding, we show that there are exactly $240$ optimal violated sets, one orbit of $\GO^+(8,2)$, each isomorphic to $DW(5,2)$.
+The same argument gives the first lower bounds $\lceil L/5\rceil$ for all quadrics with $L$ lines in $N\ge4$ qubits.
+The degree theorem is kernel-checked in Lean~4, and the completeness of the enumeration is certified by a DRAT proof checked by the verified checker \texttt{cake\_lpr}.
 \end{abstract}
 
 \section{Introduction}
@@ -75,15 +85,16 @@ Muller and Giorgetti~\cite[\S5.3]{MullerGiorgetti24} and Muller's thesis~\cite{M
 We settle both parts of this conjecture.
 \begin{itemize}[leftmargin=*]
 \item \textbf{\Cref{thm:main}.} Every hyperbolic quadric of the four-qubit space, with its $1575$ lines as contexts, has contextuality degree exactly $315$.
-\item \textbf{\Cref{prop:ruling,thm:dw}.} In every optimal assignment, each of the $40\,320$ doilies of the quadric has exactly three violated lines, which form one ruling of one of its grids. There are exactly $240$ sets of lines that arise as the violated set of an optimal assignment; they form one orbit of the orthogonal group $\GO^+(8,2)$, and each is isomorphic to $DW(5,2)$. The first statement has a two-line proof; the second is computer-assisted.
-\item \textbf{\Cref{thm:general}.} For every $N\ge3$, every hyperbolic or elliptic quadric of the $N$-qubit space, with $L$ lines, has degree at least $\lceil L/5\rceil$. This is tight for $N=3$ and for the four-qubit hyperbolic quadric, and to our knowledge it gives the first lower bounds for quadrics with $N\ge5$ qubits.
+\item \textbf{\Cref{prop:ruling,thm:dw}.} In every optimal assignment, each of the $40\,320$ doilies of the quadric has exactly three violated lines, which form one ruling of one of its grids. There are exactly $240$ sets of lines that arise as the violated set of an optimal assignment; they form one orbit of the orthogonal group $\GO^+(8,2)$, and each is isomorphic to $DW(5,2)$. The first statement has a short proof by hand; the second is computer-assisted.
+\item \textbf{\Cref{thm:general}.} For every $N\ge3$, every hyperbolic or elliptic quadric of the $N$-qubit space, with $L$ lines, has degree at least $\lceil L/5\rceil$. This is tight for $N=3$ and for the four-qubit hyperbolic quadric, and to our knowledge it gives the first lower bounds for the elliptic four-qubit quadric and for all quadrics with $N\ge5$ qubits.
 \item \textbf{\Cref{cor:inequality}.} The $1575$ contexts give a state-independent noncontextuality inequality with classical bound exactly $945$ and quantum value $1575$; equivalently, the associated single-context game has classical value exactly $4/5$.
 \end{itemize}
 
-The proof of the lower bound is short and needs no computation.
-It combines three classical ingredients: the parity argument behind the Peres--Mermin square; Sylvester's model of the generalised quadrangle $GQ(2,2)$, which shows that a doily contains ten grids covering each of its lines four times; and Witt's theorem, which makes the orthogonal group transitive on the lines of the quadric.
-Averaging over sub-configurations was used before by Saniga \emph{et al.}~\cite{Saniga24hex} and Muller \emph{et al.}~\cite{Muller24} to bound the degree of the whole space $W(2N-1,2)$, but not, as far as we know, for the quadrics, where it turns out to be tight.
+The proof of the lower bound is short and needs no computation, and we regard this as its main point: a value that resisted solver-based attacks follows from three classical ingredients.
+These are the parity argument behind the Peres--Mermin square; Sylvester's model of the generalised quadrangle $GQ(2,2)$, which shows that a doily contains ten grids covering each of its lines four times; and Witt's theorem, which makes the orthogonal group transitive on the lines of the quadric.
+The averaging principle itself is not new. Saniga \emph{et al.}~\cite[\S4.1]{Saniga24hex} obtained the degree $63$ of $W(5,2)$ by averaging over its doilies, and Muller \emph{et al.}~\cite[\S4]{Muller24} bounded the degree of the whole space $W(2N-1,2)$ by a recursion over subspaces; as far as we know, it had not been applied to the quadrics, where it turns out to be tight.
 The rounding $\lceil 10/4\rceil=3$ inside each doily is what makes the bound tight: averaging over the $67\,200$ grids of the quadric directly gives only $\lceil1575/6\rceil=263$.
+What we regard as the main new content is what the equality case gives: a local characterisation of all optimal assignments (\cref{prop:ruling}), which turns the classification of the optima into an easy and certified computation (\cref{thm:dw}), together with a formal proof of the degree.
 
 We formalised the theorem for the real quadric (the observables with an even number of $Y$ factors) in Lean~4 with Mathlib~\cite{Lean4,Mathlib}; the kernel checks every finite fact, and the statement depends only on the standard axioms (\cref{sec:lean}).
 All code and certificates are available at \repo.
@@ -92,7 +103,7 @@ All code and certificates are available at \repo.
 Computing a contextuality degree is a MAX-XOR-SAT problem, here with $135$ variables and $1575$ parity constraints of length three, and this one had resisted the solver-based attacks of~\cite{Muller23,Muller24}.
 SAT solving has settled several open problems in combinatorics, often with the help of mathematical insight in the encoding~\cite{Heule16,Zulkoski15}.
 The present case is an extreme instance of that pattern: the mathematics settles the optimisation problem completely, and what remains for the solver, the classification of all optima, becomes easy only after the proof is turned into constraints.
-\Cref{sec:sat,sec:ablation} give the encoding and a comparison: direct MaxSAT and cardinality formulations do not finish within $30$ minutes, while local cardinality constraints over doilies, together with redundant clauses derived from \cref{prop:doily}, enumerate all optimal solutions in about $30$ seconds, with a DRAT certificate for completeness.
+\Cref{sec:sat,sec:ablation} give the encoding and a comparison: direct MaxSAT and cardinality formulations do not finish within $30$ minutes, while local cardinality constraints over doilies, together with redundant clauses derived from \cref{prop:doily}, enumerate all optimal solutions in about $30$ seconds; the final unsatisfiability, which gives completeness, is certified by a DRAT proof checked by \texttt{drat-trim} and by the verified checker \texttt{cake\_lpr}.
 \Cref{sec:lean} describes the Lean proof, in particular how $191$ kernel evaluations were restructured to fit in $2.2$\,GB of memory, and \cref{sec:costs} lists the running time of every computation.
 
 \paragraph{Outline.}
@@ -194,7 +205,7 @@ For the hyperbolic quadrics, $t_r$ with $Q_0(r)=0$ carries $Q_r$ to $Q_0$.
 For the elliptic ones, $\Sp(8,2)$ is transitive on the quadratic forms of a given type with polar form $B$~\cite{Taylor92}.
 \end{proof}
 
-The $136$ hyperbolic quadrics fall into three classes by their number of negative lines ($532$, $604$ and $612$)~\cite{Muller23}; \cref{lem:resign,lem:clifford} show that this number is not an invariant of the degree problem.
+The $136$ hyperbolic quadrics fall into three classes by their number of negative lines ($532$, $604$ and $612$)~\cite{Muller23}; re-signing (\cref{lem:resign}) and Clifford transport (\cref{lem:clifford}) change this number without changing the degree, so it plays no role below.
 
 \section{Grids, doilies and their degree}\label{sec:doily}
 
@@ -221,7 +232,7 @@ It also equals $(-1)^{c_1+c_2+c_3}I$, so $\sum r_i+\sum c_j$ is odd.
 By \cref{lem:odd} (each point lies on one row and one column), every assignment violates an odd number of the six lines of such a grid.
 This is the familiar argument for the Peres--Mermin square~\cite{Peres90,Mermin90}; it also shows that every grid of $W(2N-1,2)$ is contextual~\cite{Holweck17}.
 
-A \emph{doily} of a quadric $Q$ of $W(2N-1,2)$ is the configuration of singular points and lines of $Q$ inside a $5$-dimensional subspace $U\le V$ on which $Q$ is nondegenerate.
+A \emph{doily} of a quadric $Q$ of $W(2N-1,2)$ is the configuration of singular points and lines of $Q$ inside a $5$-dimensional subspace $U\le V$ on which $Q$ is nondegenerate. Since $\dim U$ is odd and the characteristic is $2$, the restriction of $B$ to $U$ is always degenerate; nondegenerate means that its radical $U\cap U^\perp$ is one-dimensional, spanned by a vector $r$ with $Q(r)=1$, so that $Q$ is a parabolic form on $U$.
 It is a parabolic quadric $\mathcal Q(4,2)$, a generalised quadrangle $GQ(2,2)$ with $15$ points and $15$ lines~\cite{PayneThas09,HirschfeldThas16}.
 
 \begin{lemma}\label{lem:collinear}
@@ -240,7 +251,7 @@ So in $D$ the point $p$ is collinear with two points $q,m$ of the line $M$, cont
 A doily contains ten grids such that every line of the doily lies in exactly four of them and any two intersecting lines lie in exactly two of them.
 \end{lemma}
 \begin{proof}
-$GQ(2,2)$ is unique up to isomorphism and has Sylvester's model~\cite{PayneThas09}: the points are the $15$ two-element subsets (duads) of $\{1,\dots,6\}$ and the lines are the $15$ partitions of $\{1,\dots,6\}$ into three duads (synthemes), with inclusion as incidence.
+$GQ(2,2)$ is unique up to isomorphism and has Sylvester's model~\cite{PayneThas09} (\cref{fig:doily}): the points are the $15$ two-element subsets (duads) of $\{1,\dots,6\}$ and the lines are the $15$ partitions of $\{1,\dots,6\}$ into three duads (synthemes), with inclusion as incidence.
 For a partition $\{A,B\}$ of $\{1,\dots,6\}$ into two triples, the $9$ duads meeting both $A$ and $B$ correspond to $A\times B$, and the synthemes made of such duads to the $6$ bijections $A\to B$.
 Two bijections $\pi,\rho$ share $|\{a:\pi(a)=\rho(a)\}|$ duads. Identifying $A$ and $B$ with $\{1,2,3\}$, this is $0$ when $\rho^{-1}\pi$ is a $3$-cycle and $1$ when it is a transposition.
 So the even bijections are three pairwise disjoint lines covering the nine duads, and so are the odd ones, and every even bijection meets every odd one in exactly one duad: the nine duads and six synthemes form a grid.
@@ -248,6 +259,64 @@ This gives ten grids, one for each of the $\binom63/2=10$ partitions.
 A syntheme $\{ab,cd,ef\}$ lies in the grid of $\{A,B\}$ exactly when each of its duads meets both $A$ and $B$, which leaves $2^3/2=4$ partitions.
 Two synthemes sharing the duad $ab$, say $\{ab,cd,ef\}$ and $\{ab,ce,df\}$, both lie in the grid of $\{A,B\}$ iff $a,b$ are separated, $c$ is separated from $d$ and $e$, and $f$ from $d$ and $e$, which leaves the two partitions $\{\{a,c,f\},\{b,d,e\}\}$ and $\{\{b,c,f\},\{a,d,e\}\}$.
 \end{proof}
+
+\begin{figure}[ht]
+\centering
+\begin{tikzpicture}[scale=0.95,
+ line/plain/.style={black!35,line width=0.6pt},
+ line/grid/.style={blue!70!black,line width=1.1pt},
+ line/viol/.style={red!80!black,line width=1.8pt,dash pattern=on 4pt off 2pt},
+ pt/grid/.style={circle,fill=blue!70!black,inner sep=0pt,minimum size=5.5pt},
+ pt/plain/.style={circle,fill=white,draw=black!60,inner sep=0pt,minimum size=5pt}]
+\draw[line/plain] (2.853,0.927) -- (0.000,3.000);
+\draw[line/plain] (0.999,-0.324) arc[start angle=39.19, end angle=-219.19, radius=1.288];
+\draw[line/plain] (1.763,-2.427) -- (-1.763,-2.427);
+\draw[line/plain] (1.427,1.964) -- (-1.763,-2.427);
+\draw[line/plain] (-1.763,-2.427) -- (-2.853,0.927);
+\draw[line/plain] (-0.617,0.849) arc[start angle=-176.81, end angle=-435.19, radius=1.288];
+\draw[line/plain] (-2.853,0.927) -- (0.000,3.000);
+\draw[line/plain] (0.000,-2.427) -- (0.000,3.000);
+\draw[line/plain] (2.308,-0.750) -- (-2.853,0.927);
+\draw[line/grid] (0.617,0.849) arc[start angle=111.19, end angle=-147.19, radius=1.288];
+\draw[line/grid] (-1.427,1.964) -- (1.763,-2.427);
+\draw[line/grid] (-2.308,-0.750) -- (2.853,0.927);
+\draw[line/viol] (0.617,0.849) arc[start angle=-3.19, end angle=255.19, radius=1.288];
+\draw[line/viol] (2.853,0.927) -- (1.763,-2.427);
+\draw[line/viol] (-0.617,0.849) arc[start angle=68.81, end angle=327.19, radius=1.288];
+\node[pt/plain] at (0.000,3.000) {};
+\node[font=\scriptsize] at (0.000,3.300) {12};
+\node[pt/grid] at (2.853,0.927) {};
+\node[font=\scriptsize] at (3.138,1.020) {34};
+\node[pt/grid] at (1.763,-2.427) {};
+\node[font=\scriptsize] at (1.940,-2.670) {15};
+\node[pt/plain] at (-1.763,-2.427) {};
+\node[font=\scriptsize] at (-1.940,-2.670) {23};
+\node[pt/plain] at (-2.853,0.927) {};
+\node[font=\scriptsize] at (-3.138,1.020) {45};
+\node[pt/plain] at (1.427,1.964) {};
+\node[font=\scriptsize] at (1.603,2.206) {56};
+\node[pt/grid] at (0.617,0.849) {};
+\node[font=\scriptsize] at (0.782,1.076) {14};
+\node[pt/grid] at (2.308,-0.750) {};
+\node[font=\scriptsize] at (2.594,-0.843) {26};
+\node[pt/plain] at (0.999,-0.324) {};
+\node[font=\scriptsize] at (1.265,-0.411) {13};
+\node[pt/plain] at (0.000,-2.427) {};
+\node[font=\scriptsize] at (0.000,-2.727) {46};
+\node[pt/grid] at (0.000,-1.050) {};
+\node[font=\scriptsize] at (0.000,-1.330) {35};
+\node[pt/grid] at (-2.308,-0.750) {};
+\node[font=\scriptsize] at (-2.594,-0.843) {16};
+\node[pt/grid] at (-0.999,-0.324) {};
+\node[font=\scriptsize] at (-1.265,-0.411) {25};
+\node[pt/grid] at (-1.427,1.964) {};
+\node[font=\scriptsize] at (-1.603,2.206) {36};
+\node[pt/grid] at (-0.617,0.849) {};
+\node[font=\scriptsize] at (-0.782,1.076) {24};
+\end{tikzpicture}
+\caption{A doily in Sylvester's model: the points are the duads $ij$ of $\{1,\dots,6\}$ and the lines the synthemes (\cref{lem:sylvester}). The filled points and the coloured lines form the grid of the partition $\{1,2,3\}\mid\{4,5,6\}$; the three dashed lines are one of its rulings. By \cref{prop:ruling}, an optimal assignment violates exactly such a ruling in every doily of the quadric.}
+\label{fig:doily}
+\end{figure}
 
 \begin{remark}
 These ten are in fact all the grids of the doily, but only the stated multiplicities are used below. We also checked, on all $40\,320$ doilies of the four-qubit hyperbolic quadric, that each has exactly ten grids with these multiplicities (\cref{app:computations}).
@@ -295,6 +364,12 @@ The doily gains from the rounding $\lceil10/4\rceil=3$.
 Its violated fraction $3/15=1/5$ is exactly the violated fraction $315/1575$ of the quadric, so the lower bound is tight.
 \end{remark}
 
+\begin{remark}[Averaging over three-qubit sections]
+The quadric $Q_0$ has $120$ parabolic hyperplane sections $\mathcal Q(6,2)$, the sections by $a^\perp$ with $Q_0(a)=1$; each is a copy of $W(5,2)$ with $315$ lines, and each line of $Q_0$ lies in $24$ of them.
+If each section, with its inherited signs, has degree $63$, which follows from~\cite{Saniga24hex} together with~\cite[Thm.~5]{MullerGiorgetti24}, the same averaging gives $\dg\ge120\cdot63/24=315$.
+This route was implicitly available from~\cite[\S5.1.2]{Muller24}, which notes the $120$ sections, but it was not drawn there. Since the degree $63$ of $W(5,2)$ is itself obtained by averaging over doilies~\cite[\S4.1]{Saniga24hex}, it is the doily argument in two stages; the direct argument needs only \cref{prop:doily}.
+\end{remark}
+
 \section{The optimal assignments}\label{sec:optimal}
 
 Equality in the averaging argument constrains every optimal assignment locally.
@@ -318,7 +393,7 @@ By \cref{lem:clifford} the same holds for every hyperbolic quadric of $W(7,2)$.
 \end{theorem}
 
 \begin{proof}[Proof (computer-assisted)]
-\emph{Enumeration.} \Cref{sec:sat} gives a propositional formula whose models are exactly the optimal assignments (\cref{lem:encoding}). Enumerating its models with a SAT solver, each new violated set being excluded by a blocking clause, yields $240$ violated sets, after which the formula is unsatisfiable; that last unsatisfiability is certified by a DRAT proof checked by \texttt{drat-trim}.
+\emph{Enumeration.} \Cref{sec:sat} gives a propositional formula whose models are exactly the optimal assignments (\cref{lem:encoding}). Enumerating its models with a SAT solver, each new violated set being excluded by a blocking clause, yields $240$ violated sets, after which the formula is unsatisfiable; that last unsatisfiability is certified by a DRAT proof checked by \texttt{drat-trim} and, converted to LRAT, by the verified checker \texttt{cake\_lpr}~\cite{cakeLPR}. The certificate covers only this unsatisfiability; the correctness of the encoding is \cref{lem:encoding}, proved by hand (see \cref{sec:sat}).
 \emph{Gauge.}
 The assignments that violate no line are those $f$ with $f(u)+f(v)+f(u+v)=0$ on every line; the line--point incidence matrix has rank $127$ over $\F_2$, so they form a space of dimension $8$, namely the restrictions of the $256$ linear functionals, and each violated set comes from exactly $2^8$ assignments.
 \emph{Orbit.}
@@ -400,9 +475,9 @@ For the $1575$ contexts of a four-qubit hyperbolic quadric, every noncontextual 
 Equivalently, in the game in which a referee asks for the outcomes of the three observables of a uniformly random context and the player wins if their product has the quantum-mechanical sign, the best noncontextual strategy wins with probability exactly $4/5$, and the quantum strategy wins with certainty.
 \end{corollary}
 
-For the real quadric $Q_0$ all $135$ observables are real symmetric matrices, so the test needs only rebit-type measurements, which suits implementations with real amplitudes.
-The ratio of the classical to the quantum value, $945/1575=3/5$, is the same as for the doily ($9/15$), the three-qubit hyperbolic quadric ($63/105$) and the generalised quadrangle $GQ(2,4)=\Qm(5,2)$ ($27/45$)~\cite{Kelleher24}.
-So, although $\Qp(7,2)$ has a hundred times more contexts than the doily, per context it is not more contextual: under white noise that scales every correlator by a visibility $\eta$, the inequality is violated exactly when $\eta>3/5$, as for the doily.
+The inequality is exact, but it is not stronger than known ones: the ratio of the classical to the quantum value, $945/1575=3/5$, is the same as for the doily ($9/15$), the three-qubit hyperbolic quadric ($63/105$) and the generalised quadrangle $GQ(2,4)=\Qm(5,2)$ ($27/45$)~\cite{Kelleher24}.
+So, although $\Qp(7,2)$ has a hundred times more contexts than the doily, per context it is not more contextual: under white noise that scales every correlator by a visibility $\eta$, the inequality is violated exactly when $\eta>3/5$, as for the doily, while a test needs $1575$ three-observable contexts instead of $15$.
+Its interest is rather that the classical bound is known exactly for a configuration this large, and that for $Q_0$ all observables are real, so the test needs only real-amplitude (rebit) measurements.
 By \cref{thm:general}, every quadric of $N\ge3$ qubits violates at least a fifth of its contexts in every noncontextual model, so its ratio is at most $3/5$; the open question is which of them have a violated fraction strictly above $1/5$, that is a ratio strictly below $3/5$.
 The heuristic upper bounds of~\cite{Muller24} for $W(7,2)$, $\Qm(7,2)$ and $\Qp(9,2)$ are all exactly $5/17$ of their lines, which leaves open a ratio as low as $7/17$.
 
@@ -413,6 +488,7 @@ This is the four-qubit analogue of the three-qubit picture of~\cite{Saniga24hex}
 
 \section{Formal verification in Lean}\label{sec:lean}
 We formalised the theorem for $Q_0$ in Lean~4 (v4.35.0-rc2) with Mathlib~\cite{Lean4,Mathlib}.
+The toolchain is the release candidate v4.35.0-rc2 because it is the one required by the Mathlib commit we use (\texttt{045acef0}); both are pinned in the repository (\texttt{lean-toolchain}, \texttt{lake-manifest.json}), so \texttt{lake build} fetches exactly these versions, and the build was reproduced from a fresh checkout on a second machine.
 The final statement is
 \begin{center}
 \texttt{theorem degree\_eq\_315 : Contextuality.Pauli.degree 0 = 315}
@@ -468,7 +544,8 @@ File & lines & build & content \\
 \end{table}
 
 The formalisation covers the real quadric $Q_0$. The other $135$ hyperbolic quadrics follow from \cref{cor:allquadrics}, which we checked by computer but did not formalise.
-\Cref{thm:dw} is not formalised; its certificate is the DRAT proof of \cref{sec:sat}.
+The Lean proof does not formalise the general arguments of \cref{sec:doily}: instead of \cref{lem:collinear,lem:sylvester}, the kernel checks the grid structure and the odd-set property directly on each of the $2520$ doilies it uses. Likewise \cref{thm:general} for other quadrics and other $N$ is not formalised.
+\Cref{thm:dw} is not formalised; its certificate is the DRAT proof of \cref{sec:sat}, checked by \texttt{drat-trim} and by \texttt{cake\_lpr}.
 
 \section{Computations: encodings, certificates and costs}\label{sec:computations}
 This section is written for readers who want to check or reuse the computations. All of them are in the repository; \cref{tab:costs} lists their running times.
@@ -477,7 +554,7 @@ This section is written for readers who want to check or reuse the computations.
 \begin{itemize}[leftmargin=*]
 \item \emph{Finite facts used in the proofs} (numbers of quadrics, points, lines and signs; the doilies, their grids and multiplicities; the witness): computed by one Python program, recomputed by a second one written separately, and, for $Q_0$, re-evaluated by the Lean kernel. The signs are computed both from the phase rule and from $16\times16$ matrix products.
 \item \emph{\Cref{thm:main}}: the lower bound is a proof by hand (\cref{sec:doily,sec:main}); the upper bound is the evaluation of the witness on $1575$ lines. Both are kernel-checked in Lean for $Q_0$.
-\item \emph{\Cref{thm:dw}}: the completeness of the list of $240$ violated sets rests on the SAT encoding of \cref{sec:sat} and on a DRAT proof checked by \texttt{drat-trim}. The orbit, the realisability of each set and the isomorphisms with $DW(5,2)$ are checked by separate code that does not use the SAT solver.
+\item \emph{\Cref{thm:dw}}: the completeness of the list of $240$ violated sets rests on the SAT encoding of \cref{sec:sat} and on a DRAT proof checked by \texttt{drat-trim} and, as LRAT, by the verified checker \texttt{cake\_lpr}. The orbit, the realisability of each set and the isomorphisms with $DW(5,2)$ are checked by separate code that does not use the SAT solver.
 \item \emph{Remark on quadratic assignments}: an exhaustive search in C.
 \end{itemize}
 
@@ -487,8 +564,8 @@ Rather than optimise, we use \cref{prop:ruling} to characterise the optimum by l
 \begin{itemize}[leftmargin=*]
 \item \emph{Variables.} $x_p$ for the $135$ points and $v_C$ for the $1575$ lines.
 \item \emph{Parity.} For each line $C=\{a,b,c\}$, the eight clauses that forbid the assignments of $(v_C,x_a,x_b,x_c)$ with $v_C+x_a+x_b+x_c\neq s(C)$, so that $v_C$ holds iff $x$ violates $C$ ($12\,600$ clauses).
-\item \emph{Local cardinality.} For each doily $D$ of a family $\mathcal F$ covering every line equally often, ``exactly three of the fifteen $v_C$, $C\in D$, are true'', with Sinz's sequential counter~\cite{Sinz05} for ``at most $3$'' on the $v_C$ and ``at most $12$'' on their negations ($144$ clauses and $72$ auxiliary variables per doily). We use either the $2520$ doilies of the Lean proof or all $40\,320$.
-\item \emph{Pair clauses} (redundant). For any two intersecting lines $C,C'$ of a common doily, the clause $\neg v_C\vee\neg v_{C'}$. There are $37\,800$ such pairs: through each point, two of its $35$ lines lie in a common doily iff they are not coplanar on the quadric.
+\item \emph{Local cardinality.} For each doily $D$ of a family $\mathcal F$ covering every line equally often, ``exactly three of the fifteen $v_C$, $C\in D$, are true'', encoded by PySAT's \texttt{CardEnc.equals} with its sequential-counter encoding~\cite{Sinz05}, which combines an ``at most $3$'' and an ``at least $3$'' counter ($144$ clauses and $72$ auxiliary variables per doily; these are PySAT's sizes, smaller than those of the textbook encoding). We use either the $2520$ doilies of the Lean proof or all $40\,320$.
+\item \emph{Pair clauses} (redundant). For any two intersecting lines $C,C'$ of a common doily, the clause $\neg v_C\vee\neg v_{C'}$. There are $37\,800$ such pairs: through each point, two of its $35$ lines lie in a common doily iff they are not coplanar on the quadric. These clauses are not derived by the solver: they are justified by \cref{prop:doily}, applied to every doily of the quadric (not only to those of $\mathcal F$), and they are part of the input formula whose unsatisfiability the certificate checks.
 \item \emph{Blocking clauses.} After a model with violated set $\mathcal V$, the clause $\bigvee_{C\in\mathcal V}\neg v_C$. Since every model has $|\mathcal V|=315$, it excludes exactly the models with violated set $\mathcal V$.
 \end{itemize}
 
@@ -501,8 +578,9 @@ By \cref{prop:ruling} (converse), every model is optimal. Conversely, an optimal
 
 No symmetry breaking is used: the gauge freedom of \cref{sec:optimal} leaves $256$ models per violated set, and the blocking clauses act on the $v$-variables only.
 The final formula, the base formula plus the $240$ blocking clauses, has $183\,150$ variables and $413\,520$ clauses in the default configuration.
-CaDiCaL~3.0.1~\cite{CaDiCaL} refutes it and writes a DRAT proof of $39$\,MB; \texttt{drat-trim}~\cite{DRATtrim} verifies it, using $120\,460$ of the $560\,025$ lemmas.
-What is not formally verified is the encoder itself, a short Python program, and \cref{lem:encoding}.
+CaDiCaL~3.0.1~\cite{CaDiCaL} refutes it and writes a DRAT proof of $39$\,MB; \texttt{drat-trim}~\cite{DRATtrim} verifies it, using $120\,460$ of the $560\,025$ lemmas in the run recorded in the repository (CaDiCaL's proof differs slightly between machines; the formula itself is fixed by its SHA-256 hash in \texttt{drat/check.log}).
+The proof was also converted to LRAT by \texttt{drat-trim} ($22$\,MB) and checked by the verified checker \texttt{cake\_lpr}~\cite{cakeLPR}, whose correctness is proved in HOL4 down to machine code.
+The certificate establishes only that the final formula is unsatisfiable. Three parts of the argument are trusted rather than certified: the encoder, a short Python program that writes the formula; \cref{lem:encoding}, including the justification of the pair clauses by \cref{prop:doily}; and the enumeration loop, whose only role is to add one blocking clause per violated set it finds, all of which appear in the certified final formula.
 
 \subsection{What made the enumeration easy}\label{sec:ablation}
 Muller \emph{et al.}~\cite{Muller23,Muller24} attacked the degree with SAT solvers and with heuristics directly, and the direct formulations remain hard.
@@ -539,7 +617,7 @@ The smaller family is also better: the $2520$ doilies of the Lean proof give a f
 
 \subsection{Running times}\label{sec:costs}
 All times in \cref{tab:costs} are wall-clock times on a laptop (Apple M3, $8$ cores, $16$\,GB, macOS~14.5), with one thread and at low priority while other programs were running, so they are upper bounds on what a dedicated machine needs.
-Software: Python~3.12.12 with NumPy~2.5.4 and PySAT~1.9 (which bundles CaDiCaL~1.5.3); the standalone CaDiCaL~3.0.1; \texttt{drat-trim} at commit \texttt{2e3b2dc}; Lean~4 v4.35.0-rc2 with Mathlib at commit \texttt{045acef0}.
+Software: Python~3.12.12 with NumPy~2.5.4 and PySAT~1.9 (which bundles CaDiCaL~1.5.3); the standalone CaDiCaL~3.0.1; \texttt{drat-trim} at commit \texttt{2e3b2dc}; \texttt{cake\_lpr} at commit \texttt{a36874a}; Lean~4 v4.35.0-rc2 with Mathlib at commit \texttt{045acef0}.
 
 \begin{table}[ht]
 \centering\small
@@ -555,7 +633,8 @@ search for a witness (\texttt{find\_witness.py}) & Python & under 1\,s \\
 enumeration of the $240$ optimal violated sets (\texttt{enumerate\_optimal.py}) & CaDiCaL~1.5.3 & 30\,s \\
 \quad of which the final refutation & & 2\,s \\
 DRAT proof of the final refutation ($39$\,MB) & CaDiCaL~3.0.1 & 25\,s \\
-DRAT check & \texttt{drat-trim} & 11--14\,s \\
+DRAT check & \texttt{drat-trim} & 11--17\,s \\
+LRAT check of the converted proof & \texttt{cake\_lpr} & 3\,s \\
 orbit, realisability, $240$ isomorphisms with $DW(5,2)$ (\texttt{optimal\_structure.py}) & Python & 4\,s \\
 table of lower bounds for all quadrics (\texttt{general\_bounds.py}) & Python & 0.1\,s \\
 all $2^{28}$ quadratic assignments & C & 2.4\,s \\
@@ -569,7 +648,7 @@ axiom report & Lean~4 & 15\,s \\
 
 \section{Open problems}\label{sec:open}
 \begin{enumerate}[leftmargin=*]
-\item \emph{The elliptic quadric and the whole space.} For four qubits, $215\le\dg\Qm(7,2)\le315$ and $1071\le\dg W(7,2)\le1575$ from \cref{thm:general} and~\cite{Muller24}. Every line of $W(7,2)$ lies on $24$ of the $120$ elliptic quadrics, so $\dg\Qm(7,2)=315$ would give $\dg W(7,2)\ge 120\cdot315/24=1575$ and hence equality. The doily bound cannot reach $315$ here; larger sub-configurations are needed. For instance, a computer-assisted computation, which we will report separately, shows that the $756$ lines of $\Qm(7,2)$ outside a parabolic section have degree $216$, which gives $\dg\Qm(7,2)\ge306$ and $\dg W(7,2)\ge1530$.
+\item \emph{The elliptic quadric and the whole space.} For four qubits, $215\le\dg\Qm(7,2)\le315$ and $1071\le\dg W(7,2)\le1575$ from \cref{thm:general} and~\cite{Muller24}. Every line of $W(7,2)$ lies on $24$ of the $120$ elliptic quadrics, so $\dg\Qm(7,2)=315$ would give $\dg W(7,2)\ge 120\cdot315/24=1575$ and hence equality. The doily bound cannot reach $315$ here, and neither can averaging over the $136$ parabolic sections $\mathcal Q(6,2)$ of $\Qm(7,2)$, which also gives only $\lceil136\cdot63/40\rceil=215$; larger sub-configurations are needed.
 \item \emph{Five qubits.} Is $\dg\Qp(9,2)=4743$? The heuristic upper bound $6975$ of~\cite{Muller24} is far above.
 \item \emph{A conceptual proof of \cref{thm:dw}.} \Cref{prop:ruling} characterises the optimal violated sets by local conditions on doilies. Is there a direct proof that these conditions force a $DW(5,2)$, for instance through the Lagrangian Grassmannian map from the planes of $W(5,2)$ to the points of $\Qp(7,2)$~\cite{Holweck14,Muller24}?
 \item \emph{Higher rank.} Does a hyperbolic quadric $\Qp(2N-1,2)$ have degree $L/5$ whenever $5$ divides $L$, and are its optimal violated sets again a single orbit?
@@ -610,7 +689,7 @@ command & reproduces \\
 \texttt{python verify\_facts.py -{}-brute} & every finite fact of \cref{sec:prelim,sec:doily,sec:main}; the witness \\
 \texttt{python independent\_check.py} & the same, separately written \\
 \texttt{python enumerate\_optimal.py -{}-cnf} & \cref{thm:dw}: the $240$ sets and the final formula \\
-\texttt{sh drat/check.sh} & the DRAT proof and its check (needs CaDiCaL and \texttt{drat-trim}) \\
+\texttt{sh drat/check.sh} & the DRAT proof, its check, and the LRAT check by \texttt{cake\_lpr} (needs CaDiCaL and \texttt{drat-trim}; \texttt{cake\_lpr} if present) \\
 \texttt{python optimal\_structure.py} & \cref{thm:dw}: orbit, realisability, isomorphisms with $DW(5,2)$ \\
 \texttt{sh sat\_ablation.sh}, \texttt{sh sat\_direct.sh} & \cref{tab:ablation} \\
 \texttt{python general\_bounds.py} & \cref{tab:general} \\
