@@ -55,4 +55,4 @@ A Pauli observable on four qubits is encoded as an integer `v < 256`. Bit `i` is
 
 ## License
 
-GPL-3.0 (see `LICENSE`).
+MIT (see `LICENSE`).

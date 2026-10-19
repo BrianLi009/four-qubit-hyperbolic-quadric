@@ -22,7 +22,7 @@ def combine(name, pred, n, bound):
             "  exact ⟨\n%s⟩\n" % (name, bound, pred, bound, nums, pfs))
 
 L = ["""/-
-Released under the GNU GPLv3 license.
+Released under the MIT license (see LICENSE).
 -/
 import QuadricDegree.OddSets
 import QuadricDegree.Q8PlusData

@@ -1,5 +1,5 @@
 /-
-Released under the GNU GPLv3 license.
+Released under the MIT license (see LICENSE).
 -/
 import Mathlib.Data.ZMod.Basic
 import Mathlib.Order.Lattice.Nat
