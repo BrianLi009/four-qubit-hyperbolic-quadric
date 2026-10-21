@@ -1,0 +1,8 @@
+z=     62259 zorb P+2G= 216 brute= 216 OK
+z=     12351 zorb P+2G= 220 brute= 220 OK
+z=     62293 zorb P+2G= 220 brute= 220 OK
+z=     78171 zorb P+2G= 247 brute= 247 OK
+z=     12507 zorb P+2G= 238 brute= 238 OK
+z=     87388 zorb P+2G= 267 brute= 267 OK
+flip check: min(z)=216 min(~z)=216 OK
+BRUTE CHECK PASSED

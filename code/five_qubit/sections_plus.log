@@ -1,0 +1,6 @@
+Q+(9,2): 527 points, 23715 lines
+sections: 19840
+every section: elliptic, signs equivalent to W(7,2); every line lies in 896 sections
+  deg Q+(9,2) >= 19840*306/896 = 47430/7, so >= 6776  (proved)
+  deg Q+(9,2) >= 19840*315/896 = 6975, so >= 6975  (if deg Q-(7,2) = 315)
+lines of the invariant configuration per section: {315: 19840}

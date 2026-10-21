@@ -1,0 +1,9 @@
+Q+(11,2): 2079 points, 365211 lines
+orbits: [(1302, 'XXX'), (1953, 'XZm'), (58590, 'Xmm'), (136710, 'mmm'), (166656, 'mmm')]
+invariant unsatisfied configurations, smallest first:
+   138663  = 1953 (XZm) + 136710 (mmm)
+   166656  = 166656 (mmm)
+   198555  = 1302 (XXX) + 1953 (XZm) + 58590 (Xmm) + 136710 (mmm)
+   226548  = 1302 (XXX) + 58590 (Xmm) + 166656 (mmm)
+lines of the smallest one through each point, by point kind: {'X': [31], 'Z': [31], 'm': [211]}
+witness assignment checked: it violates exactly these 138663 lines

@@ -1,0 +1,2 @@
+FOUND orbit rep z=13222 P=180 G=18 f=216 (orbit size 40320)
+DONE orbits 467 (BFS covered 2^28), checked 447, min P 168, found 1 with f <= 216, bbnodes 3373025
