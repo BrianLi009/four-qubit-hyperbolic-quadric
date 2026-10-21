@@ -18,7 +18,7 @@ def wrap(items, indent="    ", width=98):
         line += t
     lines.append(line.rstrip().rstrip(","))
     return "\n".join(lines)
-L=["/-\nReleased under the GNU GPLv3 license.\n-/\nimport QuadricDegree.Basic\n",
+L=["/-\nReleased under the MIT license (see LICENSE).\n-/\nimport QuadricDegree.Basic\n",
 """/-!
 # The contexts of `Q⁺(7,2)` as a literal list
 

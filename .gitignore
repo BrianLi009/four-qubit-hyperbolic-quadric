@@ -18,3 +18,11 @@ lean/gen/order.json
 code/witness_found.json
 !code/sat_ablation.log
 !code/sat_direct.log
+code/elliptic/zorb
+code/elliptic/zdata.new
+!code/elliptic/*.log
+!code/elliptic/*.out
+code/five_qubit/anneal
+code/five_qubit/q9plus.txt
+code/five_qubit/invariant_N6.txt
+!code/five_qubit/*.log

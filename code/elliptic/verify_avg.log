@@ -1,0 +1,6 @@
+(1) lines outside k sections: {96: 1071}
+(2) orbit of v0 under signed reflections: 136 reflections verified: 100
+(3) elliptic quadrics: 120
+    W lines in k elliptic quadrics: {24: 5355}
+    orbit of our quadric under signed transvections: 120 transvections verified: 255
+ALL AVERAGING CHECKS PASSED

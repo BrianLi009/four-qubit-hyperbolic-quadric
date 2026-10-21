@@ -1,0 +1,10 @@
+self-checks passed
+orbits 50 covered 12425856/268435456 (0.0463) max orbit 1451520 checked 50 bbnodes 8203627
+orbits 100 covered 43136256/268435456 (0.1607) max orbit 2903040 checked 100 bbnodes 15815645
+orbits 150 covered 87014208/268435456 (0.3242) max orbit 2903040 checked 150 bbnodes 21558302
+orbits 200 covered 131841984/268435456 (0.4911) max orbit 2903040 checked 200 bbnodes 27063908
+orbits 250 covered 177443904/268435456 (0.6610) max orbit 2903040 checked 250 bbnodes 32109943
+orbits 300 covered 199696512/268435456 (0.7439) max orbit 2903040 checked 300 bbnodes 40508672
+orbits 350 covered 230476800/268435456 (0.8586) max orbit 2903040 checked 350 bbnodes 49043236
+orbits 400 covered 258578544/268435456 (0.9633) max orbit 2903040 checked 400 bbnodes 59874020
+orbits 450 covered 267845088/268435456 (0.9978) max orbit 2903040 checked 450 bbnodes 74995183

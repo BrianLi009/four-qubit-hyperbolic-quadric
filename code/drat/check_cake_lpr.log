@@ -1,0 +1,11 @@
+ce3835687d3b9210ee9c74df93cd8aea5f6eface68dcfb33413680f4efef9999  final.cnf
+s UNSATISFIABLE
+c parsing input formula with 183150 variables and 413520 clauses
+c finished parsing
+c detected empty clause; start verification via backward checking
+c 123684 of 413520 clauses in core                            
+c 117682 of 553360 lemmas in core using 1791718 resolution steps
+c 0 RAT lemmas in core; 15331 redundant literals in core lemmas
+s VERIFIED
+c verification time: 15.714 seconds
+s VERIFIED UNSAT
