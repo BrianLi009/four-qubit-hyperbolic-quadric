@@ -1,6 +1,6 @@
 # Code
 
-Requirements: Python 3.10 or later, with `numpy` and `python-sat` (`pip install -r requirements.txt`). A C compiler is needed for `quadratic/`. CaDiCaL and drat-trim are needed only for the DRAT check.
+Requirements: Python 3.10 or later, with `numpy` and `python-sat` (`pip install -r requirements.txt`). A C compiler is needed for `quadratic/`, `elliptic/` and `five_qubit/anneal.c`. CaDiCaL and drat-trim are needed only for the DRAT check.
 
 Every script exits with a non-zero status if a check fails.
 
@@ -17,7 +17,9 @@ Every script exits with a non-zero status if a check fails.
 | `drat/` | The DRAT check of the final unsatisfiable formula: `check.sh` and its output `check.log` (CaDiCaL proof, verified by drat-trim). If `cake_lpr` (https://github.com/tanyongkiam/cake_lpr) is on the PATH, `check.sh` also converts the proof to LRAT with drat-trim and checks it with this verified checker; `check_cake_lpr.log` is the output of such a run. The proofs themselves (39 MB DRAT, 22 MB LRAT) are regenerated, not stored | ~2 min |
 | `sat_ablation.sh`, `sat_ablation.log` | The encoding comparison of the paper: the four combinations of doily family (2520 or 40 320) and pair clauses, each with a 30-minute limit (`enumerate_optimal.py --family=all --no-pairs`, …) | up to 2 h |
 | `sat_direct.py`, `sat_direct.sh`, `sat_direct.log` | Baselines without the paper's mathematics: MaxSAT (RC2) and SAT with "at most 314 violated lines" (totalizer), each with a 30-minute limit | up to 1 h |
-| `general_bounds.py` | The table of the lower bounds ⌈L/5⌉ for all quadrics, N = 3..7, with direct counts for N ≤ 5 | < 1 s |
+| `general_bounds.py` | The table of the lower bounds ⌈L/5⌉ and ⌈2L/7⌉ for all quadrics, N = 3..7, with direct counts for N ≤ 5 | < 1 s |
+| `elliptic/` | The bound deg Q⁻(7,2) ≥ 306 and deg W(7,2) ≥ 1530. `run.sh` generates the signed instances (`gen_instances.py`), writes the parabolic complement in pair coordinates with signed symmetry generators (`mkz.py`, `group.py`) and checks it against the stored `zdata.txt`. It then runs the orbit enumeration and branch and bound `zorb.c` (467 orbits, minimum 216 attained by one orbit, next value 220), and a second run with another vector v and other generators. Finally it runs a separately written NumPy brute force on six orbits (`brute_check.py`) and the averaging and transport checks (`verify_avg.py`: 96 of the 136 complements contain each line; signed reflections reach all 136; signed transvections carry the quadric to all 120 elliptic quadrics of W(7,2), each W-line in 24) | ~20 min |
+| `five_qubit/` | The five-qubit results. `invariant.py N` lists the unsatisfied configurations of Q⁺(2N−1,2) invariant under GL(N,2), the smallest one per point kind, and an explicit assignment checked against it (21, 315, 6975 for N = 3, 4, 5; 138 663 for N = 6). `sections.py ±` checks every elliptic section of Q^±(9,2) (sign class equal to W(7,2), uniform covering) and prints the averaging bounds 6776 and 5610, and the number of lines of the 6975-configuration in each section (always 315). `anneal.c` with `dump_instance.py` runs simulated annealing (upper bounds only) | seconds to 4 min |
 | `quadratic/` | Exhaustive search over the 2^28 quadratic assignments: none violates fewer than 532 lines (`./run.sh`) | seconds |
 
 Run the scripts from this folder. `verify_facts.py`, `enumerate_optimal.py`, `optimal_structure.py` and `quadratic/prepare.py` share the integer encoding of `verify_facts.py`. `w72.py`, `doilies.py`, `independent_check.py` and `find_witness.py` use tuples, as does `witness.json`.

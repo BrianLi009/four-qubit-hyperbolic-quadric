@@ -1,4 +1,6 @@
-"""The doily lower bound deg >= ceil(L/5) for the quadrics and the whole space of N qubits (the general theorem of the paper).
+"""The doily lower bound deg >= ceil(L/5) for the quadrics and the whole space of N qubits (the general theorem of the paper),
+and the bound ceil(2L/7) obtained by averaging over elliptic sections Q-(7,2) of degree >= 306 (elliptic/), which applies to
+Q-(2N-1,2) for N >= 4, Q+(2N-1,2) for N >= 5 and W(2N-1,2) for N >= 4.
 
 Point and line counts come from the formulas in the paper; for N <= 5 they are also counted directly.
 The upper bounds are those reported by Muller et al., arXiv:2407.02928, Table 3 (quadrics) and Table 1 (W).
@@ -36,7 +38,7 @@ def direct(N, eps):
 
 def main():
     ok = True
-    print(f"{'N':>2} {'type':>4} {'points':>8} {'lines':>9} {'ceil(L/5)':>10} {'known upper':>12}")
+    print(f"{'N':>2} {'type':>4} {'points':>8} {'lines':>9} {'ceil(L/5)':>10} {'ceil(2L/7)':>11} {'known upper':>12}")
     for N in range(3, 8):
         for eps, name in ((1, "+"), (-1, "-")):
             p, L = npts(N, eps), nlines(N, eps)
@@ -44,11 +46,12 @@ def main():
                 dp, dL = direct(N, eps)
                 ok &= (dp, dL) == (p, L)
             lb = -(-L // 5)
+            lb7 = -(-2 * L // 7) if (N >= 5 or (N == 4 and eps < 0)) else "-"
             ub = UPPER[N][0 if eps > 0 else 1]
             tag = " (exact)" if (N, name) in EXACT or (N, name) == (4, "+") else ""
-            print(f"{N:>2} {('Q' + name):>4} {p:>8} {L:>9} {lb:>10} {ub:>12}{tag}")
+            print(f"{N:>2} {('Q' + name):>4} {p:>8} {L:>9} {lb:>10} {lb7:>11} {ub:>12}{tag}")
         Wl = (4 ** N - 1) * (4 ** (N - 1) - 1) // 3
-        print(f"{N:>2} {'W':>4} {4 ** N - 1:>8} {Wl:>9} {-(-Wl // 5):>10}")
+        print(f"{N:>2} {'W':>4} {4 ** N - 1:>8} {Wl:>9} {-(-Wl // 5):>10} {(-(-2 * Wl // 7)) if N >= 4 else '-':>11}")
     print("direct counts agree with the formulas for N <= 5:", ok)
     sys.exit(0 if ok else 1)
 
