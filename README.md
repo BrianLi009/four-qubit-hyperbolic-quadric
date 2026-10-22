@@ -1,4 +1,4 @@
-# The four-qubit hyperbolic quadric has contextuality degree 315
+# Contextuality degrees of the four-qubit Pauli space and its quadrics
 
 This repository contains the paper, the code and the Lean proof for the following results.
 
