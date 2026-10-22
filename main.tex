@@ -105,20 +105,17 @@ Saniga, Holweck, Kelleher, Muller, Giorgetti and de Boutray~\cite[p.~24]{Saniga2
 Muller and Giorgetti~\cite[\S5.3]{MullerGiorgetti24} and Muller's thesis~\cite{MullerThesis} list $315$ as an upper bound only.
 
 \paragraph{Results.}
-We settle both parts of this conjecture.
-\begin{itemize}[leftmargin=*]
-\item \textbf{\Cref{thm:main}.} Every hyperbolic quadric of the four-qubit space, with its $1575$ lines as contexts, has contextuality degree exactly $315$.
-\item \textbf{\Cref{prop:ruling,thm:dw}.} In every optimal assignment, each of the $40\,320$ doilies of the quadric has exactly three violated lines, which form one ruling of one of its grids. There are exactly $240$ sets of lines that arise as the violated set of an optimal assignment; they form one orbit of the orthogonal group $\GO^+(8,2)$, and each is isomorphic to $DW(5,2)$. The first statement has a short proof by hand; the second is computer-assisted.
-\item \textbf{\Cref{thm:general}.} For every $N\ge3$, every hyperbolic or elliptic quadric of the $N$-qubit space, with $L$ lines, has degree at least $\lceil L/5\rceil$. This is tight for $N=3$ and for the four-qubit hyperbolic quadric, and to our knowledge it gives the first lower bounds for the elliptic four-qubit quadric and for all quadrics with $N\ge5$ qubits.
-\item \textbf{\Cref{thm:elliptic,thm:ratio,cor:fivequbit,prop:invariant}.} The four-qubit elliptic quadric has degree exactly $315$ and $W(7,2)$ exactly $1575$ (computer-assisted); both values were known as upper bounds~\cite{Muller24}. Consequently every quadric with $N\ge5$ and every $W(2N-1,2)$ with $N\ge4$ has degree at least $\lceil 5L/17\rceil$, so the doily bound is tight only in the known cases. For five qubits, $\dg\Qp(9,2)=6975$, attained by the smallest unsatisfied configuration invariant under the CNOT group $\mathrm{GL}(5,2)$.
-\item \textbf{\Cref{cor:inequality}.} The $1575$ contexts give a state-independent noncontextuality inequality with classical bound exactly $945$ and quantum value $1575$; equivalently, a uniformly random context is satisfied with probability at most $4/5$ by any noncontextual assignment, and this bound is attained.
-\end{itemize}
+We prove this conjecture and settle several neighbouring cases.
+For the four-qubit hyperbolic quadric we prove that the degree is $315$ and classify the optimal assignments.
+For the four-qubit elliptic quadric and the whole four-qubit space we determine the degrees, $315$ and $1575$.
+From these we obtain the degree $6975$ of the five-qubit hyperbolic quadric and new lower bounds for all larger quadrics and symplectic spaces.
+\Cref{sec:contributions} lists the contributions one by one, says how each is established, and compares them with what was known (\cref{tab:contributions}).
 
-The proof of the lower bound is short and needs no computation, and we regard this as its main point: a value that resisted solver-based attacks follows from three classical ingredients.
+For the hyperbolic quadric, the proof of the lower bound is short and needs no computation, and we regard this as its main point: a value that resisted solver-based attacks follows from three classical ingredients.
 These are the parity argument behind the Peres--Mermin square; Sylvester's model of the generalised quadrangle $GQ(2,2)$, which shows that a doily contains ten grids covering each of its lines four times; and Witt's theorem, which makes the orthogonal group transitive on the lines of the quadric.
 The averaging principle itself is not new. Saniga \emph{et al.}~\cite[\S4.1]{Saniga24hex} obtained the degree $63$ of $W(5,2)$ by averaging over its doilies, and Muller \emph{et al.}~\cite[\S4]{Muller24} bounded the degree of the whole space $W(2N-1,2)$ by a recursion over subspaces; as far as we know, it had not been applied to the quadrics, where it turns out to be tight.
 The rounding $\lceil 10/4\rceil=3$ inside each doily is what makes the bound tight: averaging over the $67\,200$ grids of the quadric directly gives only $\lceil1575/6\rceil=263$.
-What we regard as the main new content is what the equality case gives: a local characterisation of all optimal assignments (\cref{prop:ruling}), which turns the classification of the optima into an easy and certified computation (\cref{thm:dw}), together with a formal proof of the degree.
+Beyond the value itself, what the equality case gives is new: a local characterisation of all optimal assignments (\cref{prop:ruling}), which turns the classification of the optima into an easy and certified computation (\cref{thm:dw}), together with a formal proof of the degree.
 
 We formalised the theorem for the real quadric (the observables with an even number of $Y$ factors) in Lean~4 with Mathlib~\cite{Lean4,Mathlib}; the kernel checks every finite fact, and the statement depends only on the standard axioms (\cref{sec:lean}).
 All code and certificates are available at \repo.
@@ -131,10 +128,77 @@ The present case is an extreme instance of that pattern: the mathematics settles
 \Cref{sec:lean} describes the Lean proof, in particular how $191$ kernel evaluations were restructured to fit in $2.2$\,GB of memory, and \cref{sec:costs} lists the running time of every computation.
 
 \paragraph{Outline.}
-\Cref{sec:related} reviews related work and \cref{sec:prelim} sets up the geometry and the symmetries of the problem.
+\Cref{sec:contributions} summarises the contributions, \cref{sec:related} reviews related work and \cref{sec:prelim} sets up the geometry and the symmetries of the problem.
 \Cref{sec:doily} proves that every doily of a quadric has degree at least $3$.
 \Cref{sec:main} proves the main theorem, \cref{sec:optimal} studies the optimal assignments, \cref{sec:general} extends the lower bound to all quadrics, and \cref{sec:beyond} determines the degree of the four-qubit elliptic quadric and deduces the degrees of $W(7,2)$ and of the five-qubit hyperbolic quadric.
 \Cref{sec:physics} discusses the physical consequences, \cref{sec:lean} the Lean proof, \cref{sec:computations} the encodings, certificates and running times, and \cref{sec:open} open problems.
+
+\section{Contributions}\label{sec:contributions}
+
+The results fall into three groups:
+\begin{itemize}[leftmargin=*]
+\item the four-qubit hyperbolic quadric (C1--C3);
+\item the four-qubit elliptic quadric and the whole four-qubit space (C4);
+\item configurations with five or more qubits (C5).
+\end{itemize}
+To these we add a physical reading (C6) and the verification of everything (C7).
+\Cref{tab:contributions} compares the values with what was known before.
+
+\begin{table}[ht]
+\centering\small
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{@{}lrlll@{}}
+\toprule
+configuration & lines & known before & this paper & established by \\
+\midrule
+$\Qp(7,2)$ & $1\,575$ & $\le315$, conjectured $=315$~\cite{Muller24} & $=315$ (\cref{thm:main}) & proof by hand, Lean \\
+optimal violated sets of $\Qp(7,2)$ & & conjectured $\cong DW(5,2)$~\cite{Muller24} & $240$, one orbit, all $\cong DW(5,2)$ (\cref{thm:dw}) & SAT, DRAT certificate \\
+$\Qm(7,2)$ & $1\,071$ & $\le315$~\cite{Muller24} & $=315$ (\cref{thm:elliptic}) & exhaustive search, cross-checked \\
+$W(7,2)$ & $5\,355$ & $[1\,071,\,1\,575]$~\cite{Muller24} & $=1\,575$ (\cref{thm:elliptic}) & averaging over $\Qm(7,2)$ \\
+$\Qp(9,2)$ & $23\,715$ & $\le6\,975$~\cite{Muller24} & $=6\,975$ (\cref{cor:fivequbit}) & averaging over $\Qm(7,2)$ \\
+$\Qm(9,2)$ & $19\,635$ & $\le7\,087$~\cite{Muller24} & $\ge5\,775$ (\cref{thm:ratio}) & averaging over $\Qm(7,2)$ \\
+quadrics, $N\ge5$ & $L$ & upper bounds only~\cite{Muller24} & $\ge\lceil5L/17\rceil$ (\cref{thm:ratio}) & averaging over $\Qm(7,2)$ \\
+$W(2N-1,2)$, $N\ge5$ & $L$ & $\ge\lceil L/5\rceil$, upper bounds~\cite{Muller24} & $\ge\lceil5L/17\rceil$ (\cref{thm:ratio}) & averaging over $W(7,2)$ \\
+\bottomrule
+\end{tabular}}
+\caption{What was known about each configuration and what this paper establishes. The last four rows rest on the computer-assisted \cref{thm:elliptic}; \cref{tab:general} gives the numbers for $N\le7$.}
+\label{tab:contributions}
+\end{table}
+
+\begin{enumerate}[label=\textbf{C\arabic*.},leftmargin=*]
+\item \textbf{The degree of the four-qubit hyperbolic quadric} (\cref{thm:main}).
+Every hyperbolic quadric of the four-qubit space, with its $1575$ lines as contexts, has degree exactly $315$; this proves the first half of the conjecture of~\cite{Muller24}.
+The proof is by hand and needs no computation.
+It combines three classical ingredients: the Peres--Mermin parity argument, Sylvester's model of the doily, and Witt's theorem.
+\item \textbf{The optimal assignments} (\cref{prop:ruling,thm:dw}).
+An assignment is optimal exactly when it violates one ruling of one grid in each of the $40\,320$ doilies.
+This local characterisation is proved by hand.
+Used as a SAT encoding, it shows that there are exactly $240$ optimal violated sets, forming one orbit of $\GO^+(8,2)$, each isomorphic to $DW(5,2)$; this proves the second half of the conjecture.
+\item \textbf{A lower bound for all quadrics} (\cref{thm:general}).
+Every quadric with $L$ lines in $N\ge3$ qubits has degree at least $\lceil L/5\rceil$.
+It is tight for $N=3$ and for $\Qp(7,2)$, and to our knowledge it gave the first lower bounds for $\Qm(7,2)$ and for all quadrics with $N\ge5$.
+\item \textbf{The four-qubit elliptic quadric and the four-qubit space} (\cref{thm:elliptic,prop:ellinvariant}).
+$\dg\Qm(7,2)=315$, the smallest case where the doily bound ($215$) fails, and hence $\dg W(7,2)=1575$.
+The proof is a computer-assisted exhaustive search of a new kind: an orbit enumeration on a parabolic section, combined with Lagrangian bounds over doilies.
+It is cross-checked by an independent second run, a brute-force recount and a separately written re-check.
+An optimum is built on the point--line incidence graph of $\mathrm{PG}(2,2)$ and is invariant under $\mathrm{GL}(3,2)\times C_3$.
+\item \textbf{Five qubits and beyond} (\cref{thm:ratio,cor:fivequbit,prop:invariant}).
+Averaging over elliptic sections gives $\dg\Qp(9,2)=6975$; in every optimal assignment, each of the $19\,840$ elliptic sections contains exactly $315$ violated lines.
+The optimum is attained by a configuration invariant under the CNOT group $\mathrm{GL}(5,2)$, whose core is the point--hyperplane incidence graph that~\cite{Muller24} conjectured.
+Every larger quadric and every $W(2N-1,2)$ with $N\ge4$ has degree at least $\lceil5L/17\rceil$.
+So the minimum violated fraction jumps from $1/5$ to $5/17$ once a configuration contains an elliptic $\Qm(7,2)$.
+\item \textbf{Noncontextuality inequalities with exact classical bounds} (\cref{cor:inequality}, \cref{sec:physics}).
+For the $1575$ contexts of $\Qp(7,2)$ the classical bound is exactly $945$, against the quantum value $1575$.
+For $\Qm(7,2)$, $W(7,2)$ and $\Qp(9,2)$ the bounds are exactly $441$, $2205$ and $9765$, a classical-to-quantum ratio of $7/17$ instead of $3/5$.
+\item \textbf{Verification} (\cref{sec:lean,sec:computations}).
+The results are established at three levels of assurance:
+\begin{itemize}[leftmargin=*]
+\item C1 is kernel-checked in Lean~4.
+\item The completeness of the enumeration in C2 is certified by a DRAT proof checked by \texttt{drat-trim} and by the verified checker \texttt{cake\_lpr}.
+\item The search behind C4 and C5 is exact but not certified, and is cross-checked as described after \cref{thm:elliptic}.
+\end{itemize}
+All code is in the repository; \cref{app:computations} gives the commands and \cref{tab:costs} the running times.
+\end{enumerate}
 
 \section{Related work}\label{sec:related}
 
