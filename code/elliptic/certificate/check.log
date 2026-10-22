@@ -1,0 +1,17 @@
+== check_setup.py
+witnesses: 315 violated lines of Q-(7,2), 1575 of W(7,2)
+setup checked: 63 signed reflections, 336 doilies covering lines 16, points 80 times
+== check_cert orbits
+orbits: 467 representatives cover 268435456 of 268435456 vectors z
+== check_cert leaves
+every doily has degree 3, so deg H >= 63; leaves need f <= 251
+leaves: 467 representatives, 425298 leaves found, all listed, nothing else listed
+== check_cert bounds
+bounds part 0 of 3: 136483 leaves by the uniform split, 5283 by certificate records (5284 nodes), all > 314
+bounds part 1 of 3: 136450 leaves by the uniform split, 5316 by certificate records (5321 nodes), all > 314
+bounds part 2 of 3: 136435 leaves by the uniform split, 5331 by certificate records (5332 nodes), all > 314
+== certificate files (SHA-256)
+21c5b45ea42cbc167748c3192b1b2aee7cc26cfef1b176c677006039dc0604dc  cert_v1_0.bin
+4ba06dedd32d5c677bf7d058a6e802642249a255b10588fd3c188786400ce1b7  cert_v1_1.bin
+359f40dba6636b94e55242ffd39e7db40b6fde72c8a28907c7cf51641ef6d994  cert_v1_2.bin
+CERTIFICATE CHECKED: every assignment of Q-(7,2) violates at least 315 lines
