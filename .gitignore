@@ -26,3 +26,11 @@ code/five_qubit/anneal
 code/five_qubit/q9plus.txt
 code/five_qubit/invariant_N6.txt
 !code/five_qubit/*.log
+code/elliptic/zcount
+code/elliptic/inner_bb
+code/elliptic/inner_bb_q
+code/elliptic/leaves_*.txt
+code/elliptic/out_*.txt
+code/elliptic/part_*
+code/elliptic/hdata_*.txt
+code/elliptic/orbits_v253.txt

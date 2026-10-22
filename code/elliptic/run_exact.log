@@ -1,0 +1,14 @@
+v0 = 1: 336 doilies
+self-checks passed
+TOTAL leaves (orbit reps) 425298, weighted by orbit size 295243200000
+425298 leaves: 425298 P, 0 U, 0 C
+v0 = 253: 1008 doilies
+self-checks passed
+TOTAL leaves (orbit reps) 425298, weighted by orbit size 295243200000
+425298 leaves: 425298 P, 0 U, 0 C
+witness violates 315 of 1071 lines
+294 orbits, 425298 leaves, mismatches: 0
+1000 leaves, not confirmed: 0
+real 5011.32
+user 13801.92
+sys 25.62
