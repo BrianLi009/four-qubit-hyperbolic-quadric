@@ -1,5 +1,4 @@
 Q-(9,2): 495 points, 19635 lines
 sections: 63360
 every section: elliptic, signs equivalent to W(7,2); every line lies in 3456 sections
-  deg Q-(9,2) >= 63360*306/3456 = 5610, so >= 5610  (proved)
-  deg Q-(9,2) >= 63360*315/3456 = 5775, so >= 5775  (if deg Q-(7,2) = 315)
+  deg Q-(9,2) >= 63360*315/3456 = 5775, so >= 5775

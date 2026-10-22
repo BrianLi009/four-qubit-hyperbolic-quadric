@@ -8,7 +8,7 @@ For Q^eps(9,2), a section is H = K^perp for a nondegenerate plane K such that Q 
     ../elliptic) up to a relabelling of the points, by solving the F2 coboundary system;
   * counts, for every line of Q^eps(9,2), the sections that contain it.
 ../elliptic/verify_avg.py shows that each elliptic quadric of W(7,2), with these signs, is equivalent to the
-instance w4_ell, of degree >= 306 (../elliptic). Hence deg Q^eps(9,2) >= #sections * 306 / r.
+instance w4_ell, of degree 315 (../elliptic). Hence deg Q^eps(9,2) >= #sections * 315 / r.
 For eps = +, it also counts the lines of the invariant configuration (invariant_N5.txt) in every section.
 
     python sections.py + | -          (about 2 minutes for +, 4 minutes for -)
@@ -72,8 +72,7 @@ cnt = Counter(cover.values())
 assert len(cnt) == 1
 r = next(iter(cnt))
 print(f"every section: elliptic, signs equivalent to W(7,2); every line lies in {r} sections")
-for d, note in ((306, "proved"), (315, "if deg Q-(7,2) = 315")):
-    bound = Fraction(len(Ks) * d, r)
-    print(f"  deg Q{EPS}(9,2) >= {len(Ks)}*{d}/{r} = {bound}, so >= {-(-bound.numerator // bound.denominator)}  ({note})")
+bound = Fraction(len(Ks) * 315, r)
+print(f"  deg Q{EPS}(9,2) >= {len(Ks)}*315/{r} = {bound}, so >= {-(-bound.numerator // bound.denominator)}")
 if inv is not None:
     print("lines of the invariant configuration per section:", dict(inv_count))
