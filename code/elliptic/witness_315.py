@@ -9,7 +9,7 @@ pts, lines = load("w4_ell")
 idx = {p: i for i, p in enumerate(pts)}
 WITNESS = [4, 6, 8, 10, 14, 32, 43, 44, 47, 50, 51, 62, 63, 64, 66, 69, 79, 92, 93, 94, 95, 99, 102, 104, 107, 114,
            117, 123, 124, 132, 134, 139, 143, 153, 155, 156, 158, 163, 169, 178, 184, 185, 189, 194, 201, 203,
-           204, 213, 216, 217, 218, 227, 234, 242, 243]   # points (as integers, bit i = x_i, bit i+4 = z_i) with value 1
+           204, 213, 216, 217, 218, 227, 234, 242, 243]   # points (as integers, bit i+4 = x_i, bit i = z_i) with value 1
 
 
 def violated(one):

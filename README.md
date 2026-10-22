@@ -5,7 +5,7 @@ This repository contains the paper, the code and the Lean proof for the followin
 - **Main theorem.** Every hyperbolic quadric Q⁺(7,2) of the four-qubit Pauli space, with its 1575 lines as contexts, has contextuality degree exactly **315**. This proves a conjecture of Muller, Saniga, Giorgetti, Holweck and Kelleher (arXiv:2407.02928).
 - **Optimal assignments.** In every optimal assignment, each of the 40 320 doilies of the quadric fails on exactly one ruling of one of its grids. There are exactly **240** optimal sets of violated lines. They form one orbit of O⁺(8,2), and each is isomorphic to the dual polar space **DW(5,2)**, which proves the second half of the same conjecture. This part is computer-assisted (SAT enumeration with a DRAT certificate).
 - **All quadrics.** For N ≥ 3, every hyperbolic or elliptic quadric of the N-qubit space with L lines has degree at least ⌈L/5⌉.
-- **Beyond the doily bound (computer-assisted).** The four-qubit elliptic quadric Q⁻(7,2) has degree exactly **315** (the doily bound gives 215), and W(7,2) exactly **1575** (doily bound 1071); both were known as upper bounds from heuristic searches. Averaging over Q⁻(7,2) sections then gives ⌈5L/17⌉ for every quadric with N ≥ 5 and every W(2N−1,2) with N ≥ 4.
+- **Beyond the doily bound (computer-assisted).** The four-qubit elliptic quadric Q⁻(7,2) has degree exactly **315** (the doily bound gives 215), and W(7,2) exactly **1575** (doily bound 1071); both were known as upper bounds from heuristic searches. The lower bound comes with an integer certificate, verified by a separately written checker that rebuilds everything from Pauli matrices. Averaging over Q⁻(7,2) sections then gives ⌈5L/17⌉ for every quadric with N ≥ 5 and every W(2N−1,2) with N ≥ 4.
 - **Five qubits.** **deg Q⁺(9,2) = 6975**, so the doily bound 4743 is far from tight. The optimum is attained by the smallest unsatisfied configuration invariant under the CNOT group GL(5,2), built on the point–hyperplane incidence graph of PG(4,2), and every optimal assignment violates exactly 315 lines in each of the 19 840 elliptic sections.
 - **Physics.** The 1575 contexts give a state-independent noncontextuality inequality: the classical bound is exactly 945 and the quantum value is 1575.
 
@@ -39,7 +39,8 @@ cd code
 ../.venv/bin/python optimal_structure.py     # orbit, realisability, comparison with the SAT list, DW(5,2) isomorphism
 ../.venv/bin/python general_bounds.py        # the table of lower bounds for all quadrics
 sh elliptic/run.sh                            # orbits of the parabolic complement, deg C_v = 216 (about 20 minutes)
-sh elliptic/run_exact.sh                      # deg Q-(7,2) = 315 and deg W(7,2) = 1575 (hours, 3 cores)
+sh elliptic/run_exact.sh                      # deg Q-(7,2) = 315 and deg W(7,2) = 1575 (about 1.5 hours, 3 cores)
+sh elliptic/certificate/run_check.sh          # its integer certificate and the separately written checker (3 cores)
 cd five_qubit
 ../../.venv/bin/python invariant.py 5         # the GL(5,2)-invariant configuration with 6975 lines (seconds)
 ../../.venv/bin/python sections.py +          # deg Q+(9,2) >= 6975 by averaging over 19 840 sections (2 minutes)

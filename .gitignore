@@ -34,3 +34,10 @@ code/elliptic/out_*.txt
 code/elliptic/part_*
 code/elliptic/hdata_*.txt
 code/elliptic/orbits_v253.txt
+code/elliptic/cert_v1_*.bin
+code/elliptic/out_cert_*.txt
+code/elliptic/certificate/check_cert
+code/elliptic/certificate/cert_*.bin
+code/elliptic/certificate/setup_v1.txt
+code/elliptic/certificate/part_cert_*
+code/elliptic/certificate/leaves_cert.txt

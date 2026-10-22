@@ -153,7 +153,7 @@ configuration & lines & known before & this paper & established by \\
 \midrule
 $\Qp(7,2)$ & $1\,575$ & $\le315$, conjectured $=315$~\cite{Muller24} & $=315$ (\cref{thm:main}) & proof by hand, Lean \\
 optimal violated sets of $\Qp(7,2)$ & & conjectured $\cong DW(5,2)$~\cite{Muller24} & $240$, one orbit, all $\cong DW(5,2)$ (\cref{thm:dw}) & SAT, DRAT certificate \\
-$\Qm(7,2)$ & $1\,071$ & $\le315$~\cite{Muller24} & $=315$ (\cref{thm:elliptic}) & exhaustive search, cross-checked \\
+$\Qm(7,2)$ & $1\,071$ & $\le315$~\cite{Muller24} & $=315$ (\cref{thm:elliptic}) & exhaustive search, integer certificate \\
 $W(7,2)$ & $5\,355$ & $[1\,071,\,1\,575]$~\cite{Muller24} & $=1\,575$ (\cref{thm:elliptic}) & averaging over $\Qm(7,2)$ \\
 $\Qp(9,2)$ & $23\,715$ & $\le6\,975$~\cite{Muller24} & $=6\,975$ (\cref{cor:fivequbit}) & averaging over $\Qm(7,2)$ \\
 $\Qm(9,2)$ & $19\,635$ & $\le7\,087$~\cite{Muller24} & $\ge5\,775$ (\cref{thm:ratio}) & averaging over $\Qm(7,2)$ \\
@@ -180,7 +180,7 @@ It is tight for $N=3$ and for $\Qp(7,2)$, and to our knowledge it gave the first
 \item \textbf{The four-qubit elliptic quadric and the four-qubit space} (\cref{thm:elliptic,prop:ellinvariant}).
 $\dg\Qm(7,2)=315$, the smallest case where the doily bound ($215$) fails, and hence $\dg W(7,2)=1575$.
 The proof is a computer-assisted exhaustive search of a new kind: an orbit enumeration on a parabolic section, combined with Lagrangian bounds over doilies.
-It is cross-checked by an independent second run, a brute-force recount and a separately written re-check.
+Its result is certified: integer Lagrangian multipliers for every case are checked in exact arithmetic by a separately written checker, which rebuilds the signed configuration from Pauli matrices and re-derives the symmetry reduction by brute force.
 An optimum is built on the point--line incidence graph of $\mathrm{PG}(2,2)$ and is invariant under $\mathrm{GL}(3,2)\times C_3$.
 \item \textbf{Five qubits and beyond} (\cref{thm:ratio,cor:fivequbit,prop:invariant}).
 Averaging over elliptic sections gives $\dg\Qp(9,2)=6975$; in every optimal assignment, each of the $19\,840$ elliptic sections contains exactly $315$ violated lines.
@@ -195,7 +195,7 @@ The results are established at three levels of assurance:
 \begin{itemize}[leftmargin=*]
 \item C1 is kernel-checked in Lean~4.
 \item The completeness of the enumeration in C2 is certified by a DRAT proof checked by \texttt{drat-trim} and by the verified checker \texttt{cake\_lpr}.
-\item The search behind C4 and C5 is exact but not certified, and is cross-checked as described after \cref{thm:elliptic}.
+\item The search behind C4 and C5 comes with a certificate in integer arithmetic, checked by a separately written checker of about $450$ lines (\cref{sec:ellcert}). The checker and the reduction it relies on are not formalised.
 \end{itemize}
 All code is in the repository; \cref{app:computations} gives the commands and \cref{tab:costs} the running times.
 \end{enumerate}
@@ -570,7 +570,7 @@ Let $Q$ be an elliptic form on $V=\F_2^8$ with polar form $B$, with its $119$ si
 $\dg\Qm(7,2)=315$ and $\dg W(7,2)=1575$.
 \end{theorem}
 
-The upper bounds are those of~\cite{Muller24}, and the repository contains an explicit assignment of $\Qm(7,2)$ with $315$ violated lines; the doily bound gives only $215$ and $1071$ (\cref{thm:general}).
+The upper bounds are those of~\cite{Muller24}, and the repository contains explicit assignments of $\Qm(7,2)$ and of $W(7,2)$ with $315$ and $1575$ violated lines; the doily bound gives only $215$ and $1071$ (\cref{thm:general}).
 Every parabolic section of $\Qm(7,2)$ has degree $315/5=63$, and the tangent sections have ratio below $1/5$ as well; this is why the doily bound stops at $215$.
 
 \begin{proof}
@@ -611,11 +611,30 @@ Every line of $W(7,2)$ lies in $24$ of the $120$ elliptic quadrics, all of degre
 
 Averaging over the complements alone, which have degree $216$ and ratio $216/756=2/7$, gives only $136\cdot216/96=306$; the coupling between $C_v$ and $H_v$ in~\eqref{eq:split} is what the search captures.
 
-The search is exact but not certified: a reader has to trust two C programs of about $200$ lines each and the Python programs that write their input.
-We cross-checked it in three ways.
-First, the whole search was repeated with another vector $v$, other random generators, and the $1008$ quadratic doilies of $H_v$ instead of the linear ones (each line in $48$, each point in $240$): it again finds $467$ orbits and $425\,298$ leaves, and settles all of them.
-Second, a separately written NumPy program recounts, by brute force over all $2^{21}$ values of $r$ with the gauge fixed on other representatives, the leaves of each of the $294$ orbits.
-Third, a separately written NumPy program rebuilds the problem~\eqref{eq:split} from the signed instance for $1000$ random leaves whose bound needed subgradient steps, and recomputes their Lagrangian bounds.
+\paragraph{Certificate.}\label{sec:ellcert}
+The search writes a certificate, and a separately written checker, sharing no code with it, verifies the certificate in exact arithmetic.
+The checker rebuilds the signed configuration from the $2\times2$ Pauli matrices, without the instance files.
+It verifies the following:
+\begin{itemize}[leftmargin=*]
+\item \emph{Symmetries.} Each of the $63$ reflections $r_u$ with $Q(u)=1$ and $u\perp v$, $u\ne v$, together with the sign correction of the Clifford unitary $(I+iP(u))/\sqrt2$, maps the violated lines of every assignment bijectively onto those of its image.
+\item \emph{Gauge.} $v$ and the seven representatives fixed by the gauge form a basis.
+\item \emph{Orbits.} The $467$ orbits, under these $63$ reflections and the complementation, cover all $2^{28}$ vectors $z$. These are not the generators of the search, so the orbits are recomputed rather than reused.
+\item \emph{Leaves.} Every doily has degree $3$. For every orbit representative, a brute force over the $2^{21}$ gauge-fixed $r$ finds exactly the listed leaves; this includes the $173$ orbits without leaves.
+\item \emph{Bounds.} Every leaf has a bound above $314$.
+  \begin{itemize}
+  \item The $409\,368$ leaves settled by the uniform split are rechecked with that split, in integers.
+  \item For the other $15\,930$, the certificate gives the multipliers of every node of the branching tree, scaled by $80\cdot2^{20}$ and rounded so that the constraints hold exactly. The checker verifies the constraints and that the fixings of the nodes cover all completions, and recomputes every doily minimum.
+  \end{itemize}
+\end{itemize}
+To leave room for rounding, the certificate run requires each bound to exceed $314$ by $2\cdot10^{-4}$.
+What remains trusted is the reduction itself: \eqref{eq:split}, the gauge argument and the Lagrangian identity, all proved above, together with about $450$ lines of Python and C.
+
+Before the certificate, we cross-checked the search in three ways, which we keep as independent evidence:
+\begin{itemize}[leftmargin=*]
+\item The whole search was repeated with another vector $v$, other random generators, and the $1008$ quadratic doilies of $H_v$ instead of the linear ones (each line in $48$, each point in $240$). It again finds $467$ orbits and $425\,298$ leaves, and settles all of them.
+\item A separately written NumPy program recounts the leaves of the $294$ orbits.
+\item Another separately written NumPy program recomputes the Lagrangian bounds of $1000$ leaves.
+\end{itemize}
 Every doily of both families has degree exactly $3$, by enumeration.
 
 The optimum has the same shape as for five qubits (\cref{prop:invariant} below), with the incidence graph of a projective plane at its core.
@@ -795,7 +814,7 @@ This section is written for readers who want to check or reuse the computations.
 \item \emph{\Cref{thm:main}}: the lower bound is a proof by hand (\cref{sec:doily,sec:main}); the upper bound is the evaluation of the witness on $1575$ lines. Both are kernel-checked in Lean for $Q_0$.
 \item \emph{\Cref{thm:dw}}: the completeness of the list of $240$ violated sets rests on the SAT encoding of \cref{sec:sat} and on a DRAT proof checked by \texttt{drat-trim} and, as LRAT, by the verified checker \texttt{cake\_lpr}. The orbit, the realisability of each set and the isomorphisms with $DW(5,2)$ are checked by separate code that does not use the SAT solver.
 \item \emph{Remark on quadratic assignments}: an exhaustive search in C.
-\item \emph{\Cref{thm:elliptic}}: an orbit enumeration and branch and bound in C over the parabolic complement, followed by a Lagrangian bound in C for each of the $425\,298$ leaves, whose input is written by Python programs from the signed instance. It is repeated with another vector $v$, other generators and another doily family; the leaves of all $294$ orbits are recounted by a separately written NumPy brute force, the bounds of $1000$ leaves are recomputed by a separately written NumPy program, and the averaging and transport steps are checked by a third program. None of this is certified.
+\item \emph{\Cref{thm:elliptic}}: an orbit enumeration and branch and bound in C over the parabolic complement, followed by a Lagrangian bound in C for each of the $425\,298$ leaves, whose input is written by Python programs from the signed instance. It is repeated with another vector $v$, other generators and another doily family; the leaves of all $294$ orbits are recounted by a separately written NumPy brute force, the bounds of $1000$ leaves are recomputed by a separately written NumPy program, and the averaging and transport steps are checked by a third program. The bound itself is certified: a separately written checker verifies, in exact integer arithmetic, the symmetry reduction by brute force and integer multipliers for every leaf (\cref{sec:ellcert}).
 \item \emph{\Cref{thm:ratio} for $N=5$, \cref{cor:fivequbit,prop:invariant}}: the covering numbers and the sign classes of all elliptic sections, the invariant configurations and their witnesses, by linear algebra over $\F_2$ in Python. The bounds for $N\ge6$ rest on the proof of \cref{thm:ratio} and \cref{thm:elliptic}, not on further computation.
 \end{itemize}
 
@@ -889,6 +908,10 @@ $\dg\Qm(7,2)=315$ (\texttt{elliptic/run\_exact.sh}), leaves of the first run (\t
 \quad recount of the leaves by brute force (\texttt{elliptic/brute\_count.py}) & Python, NumPy & 4\,min \\
 \quad independent Lagrangian check of $1000$ leaves (\texttt{elliptic/lagrange\_check.py}) & Python, NumPy & 1\,min \\
 \quad witness and invariant configurations (\texttt{witness\_315.py}, \texttt{invariant\_elliptic.py}) & Python & under 2\,s \\
+\quad certificate: multipliers for $15\,930$ leaves (\texttt{inner\_bb.c}), $3$ processes & C & 5\,min \\
+\quad checker: signs, witnesses, symmetries, doilies (\texttt{certificate/check\_setup.py}) & Python & under 1\,s \\
+\quad checker: orbit coverage; doily degrees and leaves (\texttt{certificate/check\_cert.c}) & C & 2\,min, 2\,min \\
+\quad checker: bounds of all leaves in integers, $3$ processes & C & 70\,min \\
 invariant configurations, $N=3,4,5$ (\texttt{five\_qubit/invariant.py}) & Python & under 2\,s \\
 \quad $N=6$ & Python & 10\,s \\
 elliptic sections of $\Qp(9,2)$, resp.\ $\Qm(9,2)$ (\texttt{five\_qubit/sections.py}) & Python & 2\,min, 4\,min \\
@@ -903,7 +926,7 @@ axiom report & Lean~4 & 15\,s \\
 
 \section{Open problems}\label{sec:open}
 \begin{enumerate}[leftmargin=*]
-\item \emph{A certificate for \cref{thm:elliptic}.} The proof is computer-assisted and not certified. The Lagrangian multipliers are natural certificates: checking the bound of one leaf is a single pass over $336$ doilies, which could be done in Lean, but there are $425\,298$ leaves and the orbit enumeration would need its own certificate. A conceptual proof would be better still: is there a family of sub-configurations of ratio $5/17$, whose degree is known, that covers the lines of $\Qm(7,2)$ uniformly?
+\item \emph{A formal proof of \cref{thm:elliptic}.} The bound has an integer certificate, checked by a separately written program, but it is not formalised. A Lean proof would need the reduction to the leaves and a verified checker for $425\,298$ Lagrangian bounds, each a pass over $336$ doilies. A conceptual proof would be better still: is there a family of sub-configurations of ratio $5/17$, whose degree is known, that covers the lines of $\Qm(7,2)$ uniformly?
 \item \emph{Five qubits.} Are the optimal configurations of $\Qp(9,2)$, as for $N=4$, a single orbit, here of the configuration of \cref{prop:invariant}? What is the geometric meaning of its orbit of $6510$ lines? For the elliptic quadric, $5775\le\dg\Qm(9,2)\le7087$.
 \item \emph{A conceptual proof of \cref{thm:dw}.} \Cref{prop:ruling} characterises the optimal violated sets by local conditions on doilies. Is there a direct proof that these conditions force a $DW(5,2)$, for instance through the Lagrangian Grassmannian map from the planes of $W(5,2)$ to the points of $\Qp(7,2)$~\cite{Holweck14,Muller24}?
 \item \emph{Higher rank.} The ratio $\dg/L$ of the hyperbolic quadrics jumps from $1/5$ for $N\le4$ to $5/17$ for $N=5$, and the known upper bounds suggest that it keeps growing. Averaging over elliptic sections gives $\dg\Qp(2N+1,2)/L\ge\dg\Qm(2N-1,2)/L'$ for the respective numbers of lines; is this always an equality, with every optimal assignment optimal on every elliptic section, as for $N=3$ ($1/5$) and $N=4$ ($5/17$)? For $N=5$ the best known upper bounds, $7087/19\,635\approx0.361$ and $132\,391/365\,211\approx0.363$, do not match, and equality would require $5\mid\dg\Qm(9,2)$. What is the limit of the ratio?
@@ -954,6 +977,7 @@ command & reproduces \\
 \texttt{sh quadratic/run.sh} & the remark on quadratic assignments \\
 \texttt{sh elliptic/run.sh} & the orbits and the bound $\dg C_v=216$ (needs a C compiler) \\
 \texttt{sh elliptic/run\_exact.sh} & \cref{thm:elliptic}, both runs and the separately written checks \\
+\texttt{sh elliptic/certificate/run\_check.sh} & \cref{thm:elliptic}: the certificate and its separately written checker; the witness for $\dg W(7,2)\le1575$ \\
 \texttt{python elliptic/invariant\_elliptic.py}, \texttt{python elliptic/witness\_315.py} & \cref{prop:ellinvariant}; the witness for $\dg\Qm(7,2)\le315$ \\
 \texttt{python invariant.py 5} (in \texttt{five\_qubit}) & \cref{prop:invariant} \\
 \texttt{python sections.py +}, \texttt{python sections.py -} (in \texttt{five\_qubit}) & \cref{thm:ratio} for $N=5$; the $315$ lines per section \\
